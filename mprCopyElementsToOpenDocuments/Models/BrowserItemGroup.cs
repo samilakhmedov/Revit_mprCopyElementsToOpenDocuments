@@ -60,6 +60,11 @@
         public string Name { get; }
 
         /// <summary>
+        /// Идентификатор элемента
+        /// </summary>
+        public int Id { get; }
+
+        /// <summary>
         /// Показывает, развернута ли группа
         /// </summary>
         public bool IsExpanded

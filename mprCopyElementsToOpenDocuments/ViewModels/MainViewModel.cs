@@ -16,13 +16,14 @@
     /// </summary>
     public class MainViewModel : VmBase
     {
-        private int _selectedItemsGroup;
         private readonly RevitOperationService _revitOperationService;
         private MainView _mainView;
         private RevitDocument _fromDocument;
-        private List<RevitDocument> _toDocuments;
+        private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
+        private List<BrowserItem> _selectedItems = new List<BrowserItem>();
         private ObservableCollection<BrowserGeneralGroup> _generalGroups = new ObservableCollection<BrowserGeneralGroup>();
         private ObservableCollection<RevitDocument> _openedDocuments = new ObservableCollection<RevitDocument>();
+        private ObservableCollection<RevitDocument> _toDocuments = new ObservableCollection<RevitDocument>();
 
         /// <summary>
         /// Создает экземпляр класса <see cref="MainViewModel"/>
@@ -39,13 +40,75 @@
             {
                 Documents.Add(doc);
             }
+
+            foreach (var document in Documents)
+            {
+                if (FromDocument != null)
+                {
+                    if (document.Title != FromDocument.Title)
+                        ToDocuments.Add(document);
+                }
+                else
+                {
+                    ToDocuments.Add(document);
+                }
+            }
         }
 
         /// <summary>
         /// Команда выбора текущего документа Revit
         /// </summary>
-        public ICommand LoadCurrentDocumentElementsCommand =>
-            new RelayCommandWithoutParameter(LoadCurrentDocumentElements);
+        public ICommand ProcessSelectedDocumentCommand =>
+            new RelayCommandWithoutParameter(ProcessSelectedDocument);
+
+        /// <summary>
+        /// Команда выбора настроек копирования
+        /// </summary>
+        public ICommand ChangeCopyingOptionsCommand =>
+            new RelayCommand<string>(ChangeCopyingOptions);
+
+        /// <summary>
+        /// Команда раскрытия всех элементов групп браузера
+        /// </summary>
+        public ICommand ExpandAllCommand =>
+            new RelayCommandWithoutParameter(ExpandAll);
+
+        /// <summary>
+        /// Команда скрытия всех элементов групп браузера
+        /// </summary>
+        public ICommand CollapseAllCommand =>
+            new RelayCommandWithoutParameter(CollapseAll);
+
+        /// <summary>
+        /// Команда выделения всех элементов групп браузера
+        /// </summary>
+        public ICommand CheckAllCommand =>
+            new RelayCommandWithoutParameter(CheckAll);
+
+        /// <summary>
+        /// Команда снятия выделения всех элементов групп браузера
+        /// </summary>
+        public ICommand UncheckAllCommand =>
+            new RelayCommandWithoutParameter(UncheckAll);
+
+        /// <summary>
+        /// Команда начала копирования
+        /// </summary>
+        public ICommand StartCopyingCommand =>
+            new RelayCommandWithoutParameter(StartCopying, CanStartCopying);
+
+        /// <summary>
+        /// Настройки копирования элементов
+        /// </summary>
+        public CopyingOptions CopyingOptions
+        {
+            get => _copyingOptions;
+            set
+            {
+                _copyingOptions = value;
+                OnPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Обобщенные группы элементов для отображения в дереве
@@ -89,7 +152,7 @@
         /// <summary>
         /// Документ Revit из которого производится копирование элементов
         /// </summary>
-        public List<RevitDocument> ToDocuments
+        public ObservableCollection<RevitDocument> ToDocuments
         {
             get => _toDocuments;
             set
@@ -100,15 +163,69 @@
         }
 
         /// <summary>
-        /// Количество выбранных элементов
+        /// Элементы текущего выбора
         /// </summary>
-        public int SelectedItemsCount
+        public List<BrowserItem> SelectedItems
         {
-            get => _selectedItemsGroup;
+            get => _selectedItems;
             set
             {
-                _selectedItemsGroup = value;
+                _selectedItems = value;
                 OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Разворачивает все элементы групп в браузере
+        /// </summary>
+        private void ExpandAll()
+        {
+            foreach (var generalGroup in GeneralGroups)
+            {
+                generalGroup.IsExpanded = true;
+
+                foreach (var itemsGroup in generalGroup.Items)
+                {
+                    itemsGroup.IsExpanded = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Сворачивает все элементы групп в браузере
+        /// </summary>
+        private void CollapseAll()
+        {
+            foreach (var generalGroup in GeneralGroups)
+            {
+                generalGroup.IsExpanded = false;
+
+                foreach (var itemsGroup in generalGroup.Items)
+                {
+                    itemsGroup.IsExpanded = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Отмечает все элементы групп в браузере
+        /// </summary>
+        private void CheckAll()
+        {
+            foreach (var generalGroup in GeneralGroups)
+            {
+                generalGroup.Checked = true;
+            }
+        }
+
+        /// <summary>
+        /// Снимает выделение со всех элементов групп в браузере
+        /// </summary>
+        private void UncheckAll()
+        {
+            foreach (var generalGroup in GeneralGroups)
+            {
+                generalGroup.Checked = false;
             }
         }
 
@@ -117,20 +234,82 @@
         /// </summary>
         private void OnCheckedElementsCountChanged(object sender, EventArgs e)
         {
-            SelectedItemsCount = _generalGroups
+            SelectedItems = _generalGroups
                 .SelectMany(generalGroup => generalGroup.Items)
                 .SelectMany(itemsGroup => itemsGroup.Items)
-                .Count(item => item.Checked == true);
+                .Where(item => item.Checked == true)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Проверка возможности начала копирования
+        /// </summary>
+        /// <returns></returns>
+        private bool CanStartCopying(object obj)
+        {
+            return SelectedItems.Count > 0
+                   && FromDocument != null
+                   && ToDocuments.Any(doc => doc.Selected);
         }
 
         /// <summary>
         /// Загружает все элементы выбранного документа Revit
         /// </summary>
-        private void LoadCurrentDocumentElements()
+        private void ProcessSelectedDocument()
         {
             var generalGroup = _revitOperationService.GetAllRevitElements(FromDocument);
             generalGroup.SelectionChanged += OnCheckedElementsCountChanged;
-            _generalGroups.Add(generalGroup);
+
+            GeneralGroups.Clear();
+            GeneralGroups.Add(generalGroup);
+            ToDocuments.Clear();
+            SelectedItems.Clear();
+            OnPropertyChanged(nameof(SelectedItems));
+
+            foreach (var doc in Documents)
+            {
+                doc.Selected = false;
+            }
+
+            foreach (var document in Documents)
+            {
+                if (FromDocument != null)
+                {
+                    if (document.Title != FromDocument.Title)
+                        ToDocuments.Add(document);
+                }
+                else
+                {
+                    ToDocuments.Add(document);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Изменяет текущие настройки копирования
+        /// </summary>
+        /// <param name="name">Имя выбранного условия</param>
+        private void ChangeCopyingOptions(string name)
+        {
+            switch (name)
+            {
+                case "AllowDuplicate":
+                    CopyingOptions = CopyingOptions.AllowDuplicates;
+                    break;
+                case "DisallowDuplicate":
+                    CopyingOptions = CopyingOptions.DisallowDuplicates;
+                    break;
+                case "AskUser":
+                    CopyingOptions = CopyingOptions.AskUser;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Выполняет копирование элементов
+        /// </summary>
+        private void StartCopying()
+        {
         }
     }
 }

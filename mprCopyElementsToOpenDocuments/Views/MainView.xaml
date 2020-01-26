@@ -6,7 +6,6 @@
                    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
                    xmlns:model="clr-namespace:mprCopyElementsToOpenDocuments.Models"
                    xmlns:viewModels="clr-namespace:mprCopyElementsToOpenDocuments.ViewModels"
-                   xmlns:converters="clr-namespace:ModPlusAPI.Converters;assembly=ModPlusAPI"
                    xmlns:mps="https://modplus.org/winfx/xaml/controls"
                    mc:Ignorable="d"
                    d:DataContext="{d:DesignInstance viewModels:MainViewModel, d:IsDesignTimeCreatable=False}"
@@ -19,8 +18,15 @@
                 <ResourceDictionary Source="pack://application:,,,/ModPlusStyle;component/Styles/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <XmlDataProvider x:Key="Lang" Source="C:/Projects/ru-RU.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
-            <converters:BooleanInverseConverter x:Key="BooleanInverseConverter"/>
 
+            <Style x:Key="ImgButton" TargetType="{x:Type Button}">
+                <Setter Property="Width" Value="25"></Setter>
+                <Setter Property="Height" Value="25"></Setter>
+                <Setter Property="Margin" Value="0"></Setter>
+                <Setter Property="Padding" Value="0"></Setter>
+                <Setter Property="Background" Value="Transparent"></Setter>
+                <Setter Property="BorderThickness" Value="0"></Setter>
+            </Style>
             <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
                 <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <EventSetter Event="Selected" Handler="TreeViewSelectedItem_OnHandler"/>
@@ -53,17 +59,43 @@
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.05*"/>
-            <RowDefinition Height="0.95*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal"
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 15 0"
                     HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button>
-                <!--<Image Source="../Resources/expand_all.png"/>-->
+            <Button Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/expand_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding ExpandAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
             </Button>
-            <Button Width="80"></Button>
-            <Button></Button>
-            <Button></Button>
+            <Button Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/collapse_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding CollapseAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
+            <Button Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/check_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding CheckAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
+            <Button Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/uncheck_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding UncheckAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
         </StackPanel>
         <Grid Grid.Row="1" Margin="15">
             <Grid.RowDefinitions>
@@ -73,11 +105,11 @@
             <TreeView Grid.Row="0"
                       ItemsSource="{Binding Path=GeneralGroups}"
                       ItemTemplate="{StaticResource GeneralGroupLevel}"
-                      Margin="0" BorderThickness="0"
+                      Margin="0 0 0 10" BorderThickness="0"
                       IsEnabled="True">
                 <TreeView.ItemContainerStyle>
                     <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
-                        <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></Setter>
+                        <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>
@@ -96,7 +128,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="Выбрано элементов:"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Row="1" Margin="5 0 0 0" FontSize="22" FontWeight="Bold" Text="{Binding Path=SelectedItemsCount}"
+                    <TextBlock Grid.Row="1" Margin="5 0 0 0" FontSize="22" FontWeight="Bold" Text="{Binding Path=SelectedItems.Count, Mode=OneWay}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <GroupBox Grid.Row="2" Header="Опции копирования">
                         <Grid>
@@ -105,13 +137,39 @@
                                 <RowDefinition></RowDefinition>
                                 <RowDefinition></RowDefinition>
                             </Grid.RowDefinitions>
-                            <RadioButton Grid.Row="0" Margin="0">Разрешить дублирование</RadioButton>
-                            <RadioButton Grid.Row="1" Margin="0">Запретить дублирование</RadioButton>
-                            <RadioButton Grid.Row="2" Margin="0">Запросить разрешение</RadioButton>
+                            <RadioButton Grid.Row="0" Margin="0"
+                                         Name="AllowDuplicate" Content="Разрешить дублирование"
+                                         IsChecked="True">
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Checked">
+                                        <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
+                                                               CommandParameter="{Binding ElementName=AllowDuplicate, Path=Name}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </RadioButton>
+                            <RadioButton Grid.Row="1" Margin="0"
+                                         Name="DisallowDuplicate" Content="Запретить дублирование">
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Checked">
+                                        <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
+                                                               CommandParameter="{Binding ElementName=DisallowDuplicate, Path=Name}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </RadioButton>
+                            <RadioButton Grid.Row="2" Margin="0"
+                                         Name="AskUser" Content="Запросить разрешение">
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Checked">
+                                        <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
+                                                               CommandParameter="{Binding ElementName=AskUser, Path=Name}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </RadioButton>
                         </Grid>
                     </GroupBox>
                     <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">Лог событий</Button>
-                    <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">Выполнить копирование</Button>
+                    <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Command="{Binding Path=StartCopyingCommand}">Выполнить копирование</Button>
                 </Grid>
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
@@ -123,8 +181,8 @@
                     <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="Из проекта:"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="1" Margin="5 0 5 0"
-                              ItemsSource="{Binding Path=Documents}"
-                              >
+                              ItemsSource="{Binding Path=Documents, Mode=OneWay}"
+                              SelectedItem="{Binding Path=FromDocument, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock VerticalAlignment="Center">
@@ -134,14 +192,14 @@
                         </ComboBox.ItemTemplate>
                         <b:Interaction.Triggers>
                             <b:EventTrigger EventName="SelectionChanged">
-                                <b:InvokeCommandAction Command="{Binding LoadCurrentDocumentElementsCommand}"/>
+                                <b:InvokeCommandAction Command="{Binding ProcessSelectedDocumentCommand}"/>
                             </b:EventTrigger>
                         </b:Interaction.Triggers>
                     </ComboBox>
                     <TextBlock Grid.Row="2" Margin="5 0 0 0" FontSize="14" Text="В проект:"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <ListBox Grid.Row="3"
-                             ItemsSource="{Binding Path=Documents}">
+                             ItemsSource="{Binding Path=ToDocuments, Mode=OneWay}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">

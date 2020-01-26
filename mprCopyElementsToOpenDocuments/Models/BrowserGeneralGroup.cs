@@ -9,7 +9,7 @@
     /// <summary>
     /// Общая группа элементов в браузере
     /// </summary>
-    public class BrowserGeneralGroup : VmBase, IBrowserItem
+    public class BrowserGeneralGroup : VmBase
     {
         private bool? _checked = false;
         private bool _isExpanded = true;

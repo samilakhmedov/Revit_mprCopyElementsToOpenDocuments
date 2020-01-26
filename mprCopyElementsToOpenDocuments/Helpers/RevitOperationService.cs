@@ -47,7 +47,7 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                 var elements = new List<BrowserItem>();
                 for (var j = 0; j < 20; j++)
                 {
-                    elements.Add(new BrowserItem($"Группа {(j + 1).ToString()}"));
+                    elements.Add(new BrowserItem($"Группа {(j + 1).ToString()}", j));
                 }
 
                 groups.Add(new BrowserItemGroup($"Группа {(i + 1).ToString()}", elements));

@@ -15,9 +15,11 @@
         /// Создает экземпляр класса <see cref="BrowserItem"/>
         /// </summary>
         /// <param name="name">Имя элемента</param>
-        public BrowserItem(string name)
+        /// <param name="id">Идентификатор элемента</param>
+        public BrowserItem(string name, int id)
         {
             Name = name;
+            Id = id;
         }
 
         /// <summary>
@@ -41,6 +43,11 @@
         /// Имя элемента
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Идентификатор элемента
+        /// </summary>
+        public int Id { get; }
 
         /// <summary>
         /// Метод вызова события

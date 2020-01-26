@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command.cs" />
+    <Compile Include="Helpers\CopyingOptions.cs" />
     <Compile Include="Helpers\RevitOperationService.cs" />
     <Compile Include="Models\BrowserGeneralGroup.cs" />
     <Compile Include="Models\BrowserItemGroup.cs" />
@@ -87,7 +88,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\expand_all.png" />
+    <Resource Include="Resources\check_all.png" />
+    <Resource Include="Resources\collapse_all.png" />
+    <Resource Include="Resources\expand_all.png" />
+    <Resource Include="Resources\uncheck_all.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
