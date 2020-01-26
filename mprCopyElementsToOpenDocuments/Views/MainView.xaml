@@ -10,8 +10,8 @@
                    xmlns:mps="https://modplus.org/winfx/xaml/controls"
                    mc:Ignorable="d"
                    d:DataContext="{d:DesignInstance viewModels:MainViewModel, d:IsDesignTimeCreatable=False}"
-                   d:DesignHeight="800" d:DesignWidth="550"
-                   MinHeight="600" MinWidth="450"
+                   d:DesignHeight="750" d:DesignWidth="510"
+                   MinHeight="750" MinWidth="510"
                    WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <ResourceDictionary>
@@ -98,16 +98,16 @@
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <TextBlock Grid.Row="1" Margin="5 0 0 0" FontSize="22" FontWeight="Bold" Text="{Binding Path=SelectedItemsCount}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <GroupBox Grid.Row="2" Header="Опции">
+                    <GroupBox Grid.Row="2" Header="Опции копирования">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition></RowDefinition>
                                 <RowDefinition></RowDefinition>
                                 <RowDefinition></RowDefinition>
                             </Grid.RowDefinitions>
-                            <RadioButton Grid.Row="0">Разрешить дублирование</RadioButton>
-                            <RadioButton Grid.Row="1">Запретить дублирование</RadioButton>
-                            <RadioButton Grid.Row="2">Запросить разрешение</RadioButton>
+                            <RadioButton Grid.Row="0" Margin="0">Разрешить дублирование</RadioButton>
+                            <RadioButton Grid.Row="1" Margin="0">Запретить дублирование</RadioButton>
+                            <RadioButton Grid.Row="2" Margin="0">Запросить разрешение</RadioButton>
                         </Grid>
                     </GroupBox>
                     <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">Лог событий</Button>
@@ -122,7 +122,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="Из проекта:"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <ComboBox Grid.Row="1"
+                    <ComboBox Grid.Row="1" Margin="5 0 5 0"
                               ItemsSource="{Binding Path=Documents}"
                               >
                         <ComboBox.ItemTemplate>
