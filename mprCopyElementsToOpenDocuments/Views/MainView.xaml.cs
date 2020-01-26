@@ -2,7 +2,6 @@
 {
     using System.Windows;
     using System.Windows.Controls;
-    using mprCopySheetsToOpenDocuments;
 
     /// <summary>
     /// Главное окно плагина

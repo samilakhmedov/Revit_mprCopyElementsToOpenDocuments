@@ -53,6 +53,8 @@
     <Compile Include="Models\BrowserItemGroup.cs" />
     <Compile Include="Models\BrowserItem.cs" />
     <Compile Include="Models\Interfaces\IBrowserItem.cs" />
+    <Compile Include="Models\Interfaces\IExpandableGroup.cs" />
+    <Compile Include="Models\Interfaces\IRevitEntity.cs" />
     <Compile Include="Models\RevitDocument.cs" />
     <Compile Include="ModPlusConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

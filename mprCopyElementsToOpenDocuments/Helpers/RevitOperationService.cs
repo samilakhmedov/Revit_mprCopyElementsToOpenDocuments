@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace mprCopyElementsToOpenDocuments.Helpers
+﻿namespace mprCopyElementsToOpenDocuments.Helpers
 {
+    using System.Collections.Generic;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Models;
@@ -50,7 +49,7 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                     elements.Add(new BrowserItem($"Группа {(j + 1).ToString()}", j));
                 }
 
-                groups.Add(new BrowserItemGroup($"Группа {(i + 1).ToString()}", elements));
+                groups.Add(new BrowserItemGroup($"Группа {(i + 1).ToString()}", i, elements));
             }
 
             return new BrowserGeneralGroup("Все группы", groups);

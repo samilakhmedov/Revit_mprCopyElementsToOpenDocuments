@@ -9,7 +9,7 @@
     /// <summary>
     /// Общая группа элементов в браузере
     /// </summary>
-    public class BrowserGeneralGroup : VmBase
+    public class BrowserGeneralGroup : VmBase, IBrowserItem, IExpandableGroup
     {
         private bool? _checked = false;
         private bool _isExpanded = true;
@@ -36,12 +36,10 @@
         /// </summary>
         public event EventHandler SelectionChanged;
 
-        /// <summary>
-        /// Имя группы элементов
-        /// </summary>
+        /// <inheritdoc />
         public string Name { get; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public bool? Checked
         {
             get => _checked;
@@ -59,9 +57,7 @@
             }
         }
 
-        /// <summary>
-        /// Показывает, развернута ли группа
-        /// </summary>
+        /// <inheritdoc />
         public bool IsExpanded
         {
             get => _isExpanded;

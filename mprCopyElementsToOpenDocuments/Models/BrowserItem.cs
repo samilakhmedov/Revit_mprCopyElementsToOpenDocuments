@@ -7,7 +7,7 @@
     /// <summary>
     /// Элемент в браузере
     /// </summary>
-    public class BrowserItem : VmBase, IBrowserItem
+    public class BrowserItem : VmBase, IBrowserItem, IRevitEntity
     {
         private bool? _checked = false;
 
@@ -27,6 +27,11 @@
         /// </summary>
         public event EventHandler SelectionChanged;
 
+        /// <summary>
+        /// Имя элемента
+        /// </summary>
+        public string Name { get; }
+
         /// <inheritdoc/>
         public bool? Checked
         {
@@ -39,14 +44,7 @@
             }
         }
 
-        /// <summary>
-        /// Имя элемента
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// Идентификатор элемента
-        /// </summary>
+        /// <inheritdoc/>
         public int Id { get; }
 
         /// <summary>

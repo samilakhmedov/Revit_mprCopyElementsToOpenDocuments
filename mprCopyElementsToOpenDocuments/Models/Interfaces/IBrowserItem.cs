@@ -6,11 +6,6 @@
     public interface IBrowserItem
     {
         /// <summary>
-        /// Идентификатор элемента
-        /// </summary>
-        int Id { get; }
-
-        /// <summary>
         /// Имя элемента
         /// </summary>
         string Name { get; }

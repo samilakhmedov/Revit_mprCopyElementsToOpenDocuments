@@ -4,9 +4,7 @@
     using Autodesk.Revit.Attributes;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
-    using ModPlusAPI;
     using ModPlusAPI.Windows;
-    using mprCopySheetsToOpenDocuments;
     using ViewModels;
     using Views;
 

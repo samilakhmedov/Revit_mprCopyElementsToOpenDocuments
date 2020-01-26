@@ -229,27 +229,25 @@
             }
         }
 
-        /// <summary>
-        /// Метод обработки выделения
-        /// </summary>
-        private void OnCheckedElementsCountChanged(object sender, EventArgs e)
-        {
-            SelectedItems = _generalGroups
-                .SelectMany(generalGroup => generalGroup.Items)
-                .SelectMany(itemsGroup => itemsGroup.Items)
-                .Where(item => item.Checked == true)
-                .ToList();
-        }
 
         /// <summary>
-        /// Проверка возможности начала копирования
+        /// Изменяет текущие настройки копирования
         /// </summary>
-        /// <returns></returns>
-        private bool CanStartCopying(object obj)
+        /// <param name="name">Имя выбранного условия</param>
+        private void ChangeCopyingOptions(string name)
         {
-            return SelectedItems.Count > 0
-                   && FromDocument != null
-                   && ToDocuments.Any(doc => doc.Selected);
+            switch (name)
+            {
+                case "AllowDuplicate":
+                    CopyingOptions = CopyingOptions.AllowDuplicates;
+                    break;
+                case "DisallowDuplicate":
+                    CopyingOptions = CopyingOptions.DisallowDuplicates;
+                    break;
+                case "AskUser":
+                    CopyingOptions = CopyingOptions.AskUser;
+                    break;
+            }
         }
 
         /// <summary>
@@ -286,30 +284,33 @@
         }
 
         /// <summary>
-        /// Изменяет текущие настройки копирования
-        /// </summary>
-        /// <param name="name">Имя выбранного условия</param>
-        private void ChangeCopyingOptions(string name)
-        {
-            switch (name)
-            {
-                case "AllowDuplicate":
-                    CopyingOptions = CopyingOptions.AllowDuplicates;
-                    break;
-                case "DisallowDuplicate":
-                    CopyingOptions = CopyingOptions.DisallowDuplicates;
-                    break;
-                case "AskUser":
-                    CopyingOptions = CopyingOptions.AskUser;
-                    break;
-            }
-        }
-
-        /// <summary>
         /// Выполняет копирование элементов
         /// </summary>
         private void StartCopying()
         {
+        }
+
+        /// <summary>
+        /// Проверка возможности начала копирования
+        /// </summary>
+        /// <returns></returns>
+        private bool CanStartCopying(object obj)
+        {
+            return SelectedItems.Count > 0
+                   && FromDocument != null
+                   && ToDocuments.Any(doc => doc.Selected);
+        }
+
+        /// <summary>
+        /// Метод обработки выделения
+        /// </summary>
+        private void OnCheckedElementsCountChanged(object sender, EventArgs e)
+        {
+            SelectedItems = _generalGroups
+                .SelectMany(generalGroup => generalGroup.Items)
+                .SelectMany(itemsGroup => itemsGroup.Items)
+                .Where(item => item.Checked == true)
+                .ToList();
         }
     }
 }

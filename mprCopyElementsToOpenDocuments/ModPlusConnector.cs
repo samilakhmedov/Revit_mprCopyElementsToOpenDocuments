@@ -1,4 +1,4 @@
-﻿namespace mprCopySheetsToOpenDocuments
+﻿namespace mprCopyElementsToOpenDocuments
 {
     using System;
     using System.Collections.Generic;
