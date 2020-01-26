@@ -7,34 +7,39 @@
     using ModPlusAPI.Mvvm;
 
     /// <summary>
-    /// Группа элементов в браузере
+    /// Общая группа элементов в браузере
     /// </summary>
-    public class BrowserItemGroup : VmBase, IBrowserItem
+    public class BrowserGeneralGroup : VmBase, IBrowserItem
     {
         private bool? _checked = false;
-        private bool _isExpanded;
-        private ObservableCollection<BrowserItem> _items = new ObservableCollection<BrowserItem>();
+        private bool _isExpanded = true;
+        private ObservableCollection<BrowserItemGroup> _groups = new ObservableCollection<BrowserItemGroup>();
 
         /// <summary>
-        /// Создает экземпляр класса <see cref="BrowserItemGroup"/>
+        /// Создает экземпляр класса <see cref="BrowserGeneralGroup"/>
         /// </summary>
         /// <param name="name">Имя группы</param>
-        /// <param name="items">Список элементов группы</param>
-        public BrowserItemGroup(string name, List<BrowserItem> items)
+        /// <param name="groups">Список групп элементов</param>
+        public BrowserGeneralGroup(string name, List<BrowserItemGroup> groups)
         {
             Name = name;
 
-            items.ForEach(item =>
+            groups.ForEach(group =>
             {
-                item.SelectionChanged += OnItemSelectionChanged;
-                _items.Add(item);
+                group.SelectionChanged += OnGroupSelectionChanged;
+                _groups.Add(group);
             });
         }
 
         /// <summary>
-        /// Событие выделения группы
+        /// Событие изменения количества выделенных элементов
         /// </summary>
         public event EventHandler SelectionChanged;
+
+        /// <summary>
+        /// Имя группы элементов
+        /// </summary>
+        public string Name { get; }
 
         /// <inheritdoc/>
         public bool? Checked
@@ -44,20 +49,15 @@
             {
                 _checked = value;
 
-                foreach (var item in _items)
+                foreach (var group in _groups)
                 {
-                    item.Checked = value;
+                    group.Checked = value;
                 }
 
                 OnPropertyChanged();
                 OnSelectionChanged();
             }
         }
-
-        /// <summary>
-        /// Имя группы элементов
-        /// </summary>
-        public string Name { get; }
 
         /// <summary>
         /// Показывает, развернута ли группа
@@ -75,12 +75,12 @@
         /// <summary>
         /// Список элементов группы
         /// </summary>
-        public ObservableCollection<BrowserItem> Items
+        public ObservableCollection<BrowserItemGroup> Items
         {
-            get => _items;
+            get => _groups;
             set
             {
-                _items = value;
+                _groups = value;
                 OnPropertyChanged();
             }
         }
@@ -88,7 +88,7 @@
         /// <summary>
         /// Метод обработки выделения элементов в браузере
         /// </summary>
-        private void OnItemSelectionChanged(object sender, EventArgs e)
+        private void OnGroupSelectionChanged(object sender, EventArgs e)
         {
             OnSelectionChanged();
         }

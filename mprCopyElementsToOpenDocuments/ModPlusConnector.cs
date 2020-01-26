@@ -18,7 +18,7 @@
         public SupportedProduct SupportedProduct => SupportedProduct.Revit;
 
         /// <inheritdoc />
-        public string Name => "mprCopySheetsToOpenDocuments";
+        public string Name => "mprCopyElementsToOpenDocuments";
 
 #if R2015
         /// <inheritdoc />
@@ -41,7 +41,7 @@
 #endif
 
         /// <inheritdoc />
-        public string FullClassName => "mprCopySheetsToOpenDocuments.Command";
+        public string FullClassName => "mprCopyElementsToOpenDocuments.Command";
 
         /// <inheritdoc />
         public string AppFullClassName => string.Empty;
@@ -50,13 +50,13 @@
         public Guid AddInId => Guid.Empty;
 
         /// <inheritdoc />
-        public string LName => "Копировать листы в документы";
+        public string LName => "Копировать элементы в документы";
 
         /// <inheritdoc />
-        public string Description => "Пакетное копирование листов в открытые документы";
+        public string Description => "Пакетное копирование элементов в открытые документы";
 
         /// <inheritdoc />
-        public string Author => "Похомов Максим";
+        public string Author => string.Empty;
 
         /// <inheritdoc />
         public string Price => "0";
@@ -65,7 +65,7 @@
         public bool CanAddToRibbon => true;
 
         /// <inheritdoc />
-        public string FullDescription => "Пакетное копирование выбранных листов из текущего документа в указанные открытые документы с возможностью указания копируемого содержимого";
+        public string FullDescription => "Пакетное копирование выбранных элементов из текущего документа в указанные открытые документы";
 
         /// <inheritdoc />
         public string ToolTipHelpImage => string.Empty;
