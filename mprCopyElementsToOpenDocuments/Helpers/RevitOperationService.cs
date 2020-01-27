@@ -1,6 +1,8 @@
 ﻿namespace mprCopyElementsToOpenDocuments.Helpers
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Models;
@@ -10,6 +12,9 @@
     /// </summary>
     public class RevitOperationService
     {
+        private const string ParamError = "Ошибка при получении элементов категории {0}";
+        private const string ParamStart = "{0} - Начало операции сбора элементов модели";
+        private const string ParamFinish = "{0} - Завершение операции сбора элементов модели";
         private readonly UIApplication _uiApplication;
 
         /// <summary>
@@ -39,18 +44,33 @@
         /// <returns></returns>
         public BrowserGeneralGroup GetAllRevitElements(RevitDocument revitDocument)
         {
-            // test data
-            var groups = new List<BrowserItemGroup>();
-            for (var i = 0; i < 50; i++)
-            {
-                var elements = new List<BrowserItem>();
-                for (var j = 0; j < 20; j++)
-                {
-                    elements.Add(new BrowserItem($"Группа {(j + 1).ToString()}", j));
-                }
+            Logger.Instance.Add(string.Format(ParamStart, DateTime.Now.ToLocalTime()));
 
-                groups.Add(new BrowserItemGroup($"Группа {(i + 1).ToString()}", i, elements));
+            var groups = new List<BrowserItemGroup>();
+
+            var allElements = new FilteredElementCollector(revitDocument.Document)
+                .WherePasses(new LogicalOrFilter(
+                    new ElementIsElementTypeFilter(false),
+                    new ElementIsElementTypeFilter(true)))
+                .Where(e => e.Category != null && e.IsValidObject);
+
+            var groupedElements = allElements.GroupBy(e => e.Category.Name);
+            foreach (var group in groupedElements)
+            {
+                try
+                {
+                    var elements = group.Select(element => new BrowserItem(element.Name, element.Id.IntegerValue))
+                        .ToList();
+                    groups.Add(new BrowserItemGroup(group.Key, elements));
+                }
+                catch
+                {
+                    Logger.Instance.Add(string.Format(ParamError, group.Key));
+                }
             }
+
+            Logger.Instance.Add(string.Format(ParamFinish, DateTime.Now.ToLocalTime()));
+            Logger.Instance.Add("---------");
 
             return new BrowserGeneralGroup("Все группы", groups);
         }

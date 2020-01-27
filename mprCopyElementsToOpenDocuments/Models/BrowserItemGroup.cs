@@ -9,7 +9,7 @@
     /// <summary>
     /// Группа элементов в браузере
     /// </summary>
-    public class BrowserItemGroup : VmBase, IBrowserItem, IExpandableGroup, IRevitEntity
+    public class BrowserItemGroup : VmBase, IBrowserItem, IExpandableGroup
     {
         private bool? _checked = false;
         private bool _isExpanded;
@@ -19,12 +19,12 @@
         /// Создает экземпляр класса <see cref="BrowserItemGroup"/>
         /// </summary>
         /// <param name="name">Имя группы</param>
-        /// <param name="id">Идентификатор группы</param>
         /// <param name="items">Список элементов группы</param>
-        public BrowserItemGroup(string name, int id, List<BrowserItem> items)
+        /////// <param name="id">Идентификатор группы</param>
+        public BrowserItemGroup(string name,/* int id,*/ List<BrowserItem> items)
         {
             Name = name;
-            Id = id;
+            ////Id = id;
 
             items.ForEach(item =>
             {
@@ -70,8 +70,8 @@
             }
         }
 
-        /// <inheritdoc />
-        public int Id { get; }
+        /////// <inheritdoc />
+        ////public int Id { get; }
 
         /// <summary>
         /// Список элементов группы

@@ -57,6 +57,7 @@
             </HierarchicalDataTemplate>
         </ResourceDictionary>
     </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -167,7 +168,8 @@
                             </RadioButton>
                         </Grid>
                     </GroupBox>
-                    <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">Лог событий</Button>
+                    <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Command="{Binding Path=OpenLogCommand}">Лог событий</Button>
                     <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Command="{Binding Path=StartCopyingCommand}">Выполнить копирование</Button>
                 </Grid>

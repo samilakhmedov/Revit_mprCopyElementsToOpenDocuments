@@ -17,6 +17,7 @@
     public class MainViewModel : VmBase
     {
         private readonly RevitOperationService _revitOperationService;
+        private string _currentLogState = string.Empty;
         private MainView _mainView;
         private RevitDocument _fromDocument;
         private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
@@ -96,6 +97,25 @@
         /// </summary>
         public ICommand StartCopyingCommand =>
             new RelayCommandWithoutParameter(StartCopying, CanStartCopying);
+
+        /// <summary>
+        /// Команда открытия журнала работы приложения
+        /// </summary>
+        public ICommand OpenLogCommand =>
+            new RelayCommandWithoutParameter(OpenLog);
+
+        /// <summary>
+        /// Текущее состояние журнала событий
+        /// </summary>
+        public string CurrentLogState
+        {
+            get => _currentLogState;
+            set
+            {
+                _currentLogState = value;
+                OnPropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Настройки копирования элементов
@@ -299,6 +319,16 @@
             return SelectedItems.Count > 0
                    && FromDocument != null
                    && ToDocuments.Any(doc => doc.Selected);
+        }
+
+        /// <summary>
+        /// Открывает окно журнала работы приложения
+        /// </summary>
+        private void OpenLog()
+        {
+            var loggerView = new LoggerView {DataContext = this};
+            CurrentLogState = string.Join(Environment.NewLine, Logger.Instance);
+            loggerView.Show();
         }
 
         /// <summary>

@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Command.cs" />
     <Compile Include="Helpers\CopyingOptions.cs" />
+    <Compile Include="Helpers\Logger.cs" />
     <Compile Include="Helpers\RevitOperationService.cs" />
     <Compile Include="Models\BrowserGeneralGroup.cs" />
     <Compile Include="Models\BrowserItemGroup.cs" />
@@ -61,6 +62,9 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\LoggerView.xaml.cs">
+      <DependentUpon>LoggerView.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +89,10 @@
   <ItemGroup />
   <ItemGroup>
     <Page Include="Views\MainView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\LoggerView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
