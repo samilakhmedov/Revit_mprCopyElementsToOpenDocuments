@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="Command.cs" />
     <Compile Include="Helpers\CopyingOptions.cs" />
+    <Compile Include="Helpers\CustomCopyHandlerAbort.cs" />
+    <Compile Include="Helpers\CustomCopyHandlerAllow.cs" />
     <Compile Include="Helpers\Logger.cs" />
     <Compile Include="Helpers\RevitOperationService.cs" />
     <Compile Include="Models\BrowserGeneralGroup.cs" />
