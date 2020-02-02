@@ -9,22 +9,20 @@
     /// <summary>
     /// Группа элементов в браузере
     /// </summary>
-    public class BrowserItemGroup : VmBase, IBrowserItem, IExpandableGroup
+    public class BrowserItemsGroup : VmBase, IBrowserItem, IExpandableGroup
     {
         private bool? _checked = false;
         private bool _isExpanded;
         private ObservableCollection<BrowserItem> _items = new ObservableCollection<BrowserItem>();
 
         /// <summary>
-        /// Создает экземпляр класса <see cref="BrowserItemGroup"/>
+        /// Создает экземпляр класса <see cref="BrowserItemsGroup"/>
         /// </summary>
         /// <param name="name">Имя группы</param>
         /// <param name="items">Список элементов группы</param>
-        /////// <param name="id">Идентификатор группы</param>
-        public BrowserItemGroup(string name,/* int id,*/ List<BrowserItem> items)
+        public BrowserItemsGroup(string name, List<BrowserItem> items)
         {
             Name = name;
-            ////Id = id;
 
             items.ForEach(item =>
             {
@@ -69,9 +67,6 @@
                 OnPropertyChanged();
             }
         }
-
-        /////// <inheritdoc />
-        ////public int Id { get; }
 
         /// <summary>
         /// Список элементов группы

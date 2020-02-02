@@ -31,30 +31,6 @@
                 <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <EventSetter Event="Selected" Handler="TreeViewSelectedItem_OnHandler"/>
             </Style>
-            <DataTemplate DataType="{x:Type model:BrowserItem}" x:Key="ItemsLevel">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock VerticalAlignment="Center">
-                        <Run Text="{Binding Path=Name, Mode=OneWay}"/>
-                    </TextBlock>
-                </StackPanel>
-            </DataTemplate>
-            <HierarchicalDataTemplate DataType="{x:Type model:BrowserItemGroup}" x:Key="ItemsGroupLevel"
-                                      ItemsSource="{Binding Path=Items}"
-                                      ItemTemplate="{StaticResource ItemsLevel}">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </HierarchicalDataTemplate>
-            <HierarchicalDataTemplate DataType="{x:Type model:BrowserGeneralGroup}" x:Key="GeneralGroupLevel"
-                                      ItemsSource="{Binding Path=Items}"
-                                      ItemTemplate="{StaticResource ItemsGroupLevel}">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </HierarchicalDataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -105,9 +81,16 @@
             </Grid.RowDefinitions>
             <TreeView Grid.Row="0"
                       ItemsSource="{Binding Path=GeneralGroups}"
-                      ItemTemplate="{StaticResource GeneralGroupLevel}"
                       Margin="0 0 0 10" BorderThickness="0"
                       IsEnabled="True">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type model:BrowserGeneralGroup}" ItemsSource="{Binding Path=Items}">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="{Binding Path=Name, Mode=OneWay}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
                 <TreeView.ItemContainerStyle>
                     <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
                         <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -169,7 +152,7 @@
                         </Grid>
                     </GroupBox>
                     <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Command="{Binding Path=OpenLogCommand}">Лог событий</Button>
+                            Command="{Binding Path=OpenLogCommand}">Журнал работы</Button>
                     <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Command="{Binding Path=StartCopyingCommand}">Выполнить копирование</Button>
                 </Grid>

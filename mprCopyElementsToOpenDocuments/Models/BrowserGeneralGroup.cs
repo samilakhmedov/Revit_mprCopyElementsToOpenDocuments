@@ -13,14 +13,14 @@
     {
         private bool? _checked = false;
         private bool _isExpanded = true;
-        private ObservableCollection<BrowserItemGroup> _groups = new ObservableCollection<BrowserItemGroup>();
+        private ObservableCollection<BrowserItemsGroup> _groups = new ObservableCollection<BrowserItemsGroup>();
 
         /// <summary>
         /// Создает экземпляр класса <see cref="BrowserGeneralGroup"/>
         /// </summary>
         /// <param name="name">Имя группы</param>
         /// <param name="groups">Список групп элементов</param>
-        public BrowserGeneralGroup(string name, List<BrowserItemGroup> groups)
+        public BrowserGeneralGroup(string name, List<BrowserItemsGroup> groups)
         {
             Name = name;
 
@@ -71,7 +71,7 @@
         /// <summary>
         /// Список элементов группы
         /// </summary>
-        public ObservableCollection<BrowserItemGroup> Items
+        public ObservableCollection<BrowserItemsGroup> Items
         {
             get => _groups;
             set

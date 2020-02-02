@@ -47,17 +47,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command.cs" />
+    <Compile Include="Helpers\BrowserItemEqualityComparer.cs" />
     <Compile Include="Helpers\CopyingOptions.cs" />
     <Compile Include="Helpers\CustomCopyHandlerAbort.cs" />
     <Compile Include="Helpers\CustomCopyHandlerAllow.cs" />
     <Compile Include="Helpers\Logger.cs" />
     <Compile Include="Helpers\RevitOperationService.cs" />
     <Compile Include="Models\BrowserGeneralGroup.cs" />
-    <Compile Include="Models\BrowserItemGroup.cs" />
+    <Compile Include="Models\BrowserItemsGroup.cs" />
     <Compile Include="Models\BrowserItem.cs" />
     <Compile Include="Models\Interfaces\IBrowserItem.cs" />
     <Compile Include="Models\Interfaces\IExpandableGroup.cs" />
-    <Compile Include="Models\Interfaces\IRevitEntity.cs" />
+    <Compile Include="Models\Interfaces\IRevitElement.cs" />
     <Compile Include="Models\RevitDocument.cs" />
     <Compile Include="ModPlusConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
