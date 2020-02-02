@@ -1,17 +1,21 @@
-﻿namespace mprCopyElementsToOpenDocuments.Models
+﻿using System.Linq;
+
+namespace mprCopyElementsToOpenDocuments.Models
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
+    using System.Collections.ObjectModel;
     using Interfaces;
     using ModPlusAPI.Mvvm;
 
     /// <summary>
     /// Элемент в браузере
     /// </summary>
-    public class BrowserItem : VmBase, IBrowserItem, IRevitElement, IEquatable<BrowserItem>
+    public class BrowserItem : VmBase, IBrowserItem, IExpandableGroup, IRevitElement
     {
         private bool? _checked = false;
+        private bool _isExpanded;
+        private ObservableCollection<BrowserItem> _items = new ObservableCollection<BrowserItem>();
 
         /// <summary>
         /// Создает экземпляр класса <see cref="BrowserItem"/>
@@ -20,14 +24,37 @@
         /// <param name="categoryName">Имя категории</param>
         /// <param name="familyName">Имя семейства</param>
         /// <param name="name">Имя элемента</param>
-        /// <param name="isType">Является ли элемент типом</param>
-        public BrowserItem(int id, string categoryName, string familyName, string name, bool isType = false)
+        public BrowserItem(int id, string categoryName, string familyName, string name)
         {
             Id = id;
             CategoryName = categoryName;
             FamilyName = familyName;
             Name = name;
-            IsType = isType;
+        }
+
+        /// <summary>
+        /// Создает экземпляр класса <see cref="BrowserItem"/>
+        /// </summary>
+        /// <param name="name">Имя группы</param>
+        /// <param name="items">Список элементов группы</param>
+        public BrowserItem(string name, List<BrowserItem> items)
+        {
+            Name = name;
+
+            items.ForEach(item =>
+            {
+                item.SelectionChanged += OnItemSelectionChanged;
+
+                if (item.Items.Any())
+                {
+                    foreach (var browserItem in item.Items)
+                    {
+                        browserItem.SelectionChanged += OnItemSelectionChanged;
+                    }
+                }
+
+                _items.Add(item);
+            });
         }
 
         /// <summary>
@@ -42,8 +69,28 @@
             set
             {
                 _checked = value;
+
+                if (Items.Any())
+                {
+                    foreach (var item in Items)
+                    {
+                        item.Checked = value;
+                    }
+                }
+
                 OnPropertyChanged();
                 OnSelectionChanged();
+            }
+        }
+
+        /// <inheritdoc />
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                _isExpanded = value;
+                OnPropertyChanged();
             }
         }
 
@@ -59,8 +106,26 @@
         /// <inheritdoc/>
         public string Name { get; }
 
-        /// <inheritdoc/>
-        public bool IsType { get; }
+        /// <summary>
+        /// Список элементов группы
+        /// </summary>
+        public ObservableCollection<BrowserItem> Items
+        {
+            get => _items;
+            set
+            {
+                _items = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Метод обработки выделения элементов в браузере
+        /// </summary>
+        private void OnItemSelectionChanged(object sender, EventArgs e)
+        {
+            OnSelectionChanged();
+        }
 
         /// <summary>
         /// Метод вызова события
@@ -68,42 +133,6 @@
         protected virtual void OnSelectionChanged()
         {
             SelectionChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Сравнивает элементы браузера
-        /// </summary>
-        /// <param name="other">Элемент сравнения</param>
-        public bool Equals(BrowserItem other)
-        {
-            if (other is null)
-                return false;
-
-            if (ReferenceEquals(this, other))
-                return true;
-
-            return string.Equals(Name, other.Name);
-        }
-
-        public int SaveHashCode<T>(T x)
-        {
-            if (EqualityComparer<T>.Default.Equals(x, default(T)))
-                return 0;
-
-            if (x is IEnumerable<object> xEnumerable)
-                return xEnumerable.Aggregate(17, (acc, item) => (acc * 19) + SaveHashCode(item));
-
-            return x.GetHashCode();
-        }
-
-        /// <summary>
-        /// Возвращает хэш код элемента
-        /// </summary>
-        /// <param name="obj">Элемент браузера</param>
-        /// <returns>Хэш код элемента</returns>
-        public int GetHashCode(BrowserItem obj)
-        {
-            return obj.Name.GetHashCode();
         }
     }
 }

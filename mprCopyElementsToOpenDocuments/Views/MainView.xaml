@@ -84,7 +84,7 @@
                       Margin="0 0 0 10" BorderThickness="0"
                       IsEnabled="True">
                 <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type model:BrowserGeneralGroup}" ItemsSource="{Binding Path=Items}">
+                    <HierarchicalDataTemplate DataType="{x:Type model:GeneralItemsGroup}" ItemsSource="{Binding Path=Items}">
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Text="{Binding Path=Name, Mode=OneWay}" VerticalAlignment="Center"/>

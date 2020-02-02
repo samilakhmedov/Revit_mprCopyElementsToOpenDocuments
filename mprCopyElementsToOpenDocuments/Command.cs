@@ -24,13 +24,6 @@
 
                 if (_mainView == null)
                 {
-                    ////if (commandData.Application.Application.Documents.Size < 2)
-                    ////{
-                    ////    // Необходимо открыть не менее двух документов
-                    ////    MessageBox.Show(Language.GetItem(ModPlusConnector.Instance.Name, "m1"), MessageBoxIcon.Close);
-                    ////    return Result.Cancelled;
-                    ////}
-
                     _mainView = new MainView();
                     var viewModel = new MainViewModel(commandData.Application, _mainView);
                     _mainView.DataContext = viewModel;

@@ -22,7 +22,7 @@
         private RevitDocument _fromDocument;
         private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
         private List<BrowserItem> _selectedItems = new List<BrowserItem>();
-        private ObservableCollection<BrowserGeneralGroup> _generalGroups = new ObservableCollection<BrowserGeneralGroup>();
+        private ObservableCollection<GeneralItemsGroup> _generalGroups = new ObservableCollection<GeneralItemsGroup>();
         private ObservableCollection<RevitDocument> _openedDocuments = new ObservableCollection<RevitDocument>();
         private ObservableCollection<RevitDocument> _toDocuments = new ObservableCollection<RevitDocument>();
 
@@ -57,7 +57,7 @@
         }
 
         /// <summary>
-        /// Команда выбора текущего документа Revit
+        /// Команда обработки выбранного документа Revit
         /// </summary>
         public ICommand ProcessSelectedDocumentCommand =>
             new RelayCommandWithoutParameter(ProcessSelectedDocument);
@@ -133,7 +133,7 @@
         /// <summary>
         /// Обобщенные группы элементов для отображения в дереве
         /// </summary>
-        public ObservableCollection<BrowserGeneralGroup> GeneralGroups
+        public ObservableCollection<GeneralItemsGroup> GeneralGroups
         {
             get => _generalGroups;
             set
@@ -203,10 +203,13 @@
             foreach (var generalGroup in GeneralGroups)
             {
                 generalGroup.IsExpanded = true;
-
-                foreach (var itemsGroup in generalGroup.Items)
+                foreach (var categoryGroup in generalGroup.Items)
                 {
-                    itemsGroup.IsExpanded = true;
+                    categoryGroup.IsExpanded = true;
+                    foreach (var typeGroup in categoryGroup.Items)
+                    {
+                        typeGroup.IsExpanded = true;
+                    }
                 }
             }
         }
@@ -219,10 +222,13 @@
             foreach (var generalGroup in GeneralGroups)
             {
                 generalGroup.IsExpanded = false;
-
-                foreach (var itemsGroup in generalGroup.Items)
+                foreach (var categoryGroup in generalGroup.Items)
                 {
-                    itemsGroup.IsExpanded = false;
+                    categoryGroup.IsExpanded = false;
+                    foreach (var typeGroup in categoryGroup.Items)
+                    {
+                        typeGroup.IsExpanded = false;
+                    }
                 }
             }
         }
@@ -308,6 +314,11 @@
         /// </summary>
         private void StartCopying()
         {
+            _revitOperationService.CopyElements(
+                FromDocument,
+                ToDocuments,
+                SelectedItems,
+                CopyingOptions);
         }
 
         /// <summary>
@@ -326,7 +337,7 @@
         /// </summary>
         private void OpenLog()
         {
-            var loggerView = new LoggerView {DataContext = this};
+            var loggerView = new LoggerView { DataContext = this };
             CurrentLogState = string.Join(Environment.NewLine, Logger.Instance);
             loggerView.Show();
         }
@@ -336,11 +347,28 @@
         /// </summary>
         private void OnCheckedElementsCountChanged(object sender, EventArgs e)
         {
-            SelectedItems = _generalGroups
-                .SelectMany(generalGroup => generalGroup.Items)
-                .SelectMany(itemsGroup => itemsGroup.Items)
-                .Where(item => item.Checked == true)
-                .ToList();
+            var allCheckedElements = new List<BrowserItem>();
+
+            foreach (var generalGroup in _generalGroups)
+            {
+                foreach (var categoryGroup in generalGroup.Items)
+                {
+                    foreach (var typeGroup in categoryGroup.Items)
+                    {
+                        if (typeGroup.Items.Any())
+                        {
+                            allCheckedElements.AddRange(typeGroup.Items.Where(instance => instance.Checked == true));
+                        }
+                        else
+                        {
+                            if (typeGroup.Checked == true)
+                                allCheckedElements.Add(typeGroup);
+                        }
+                    }
+                }
+            }
+
+            SelectedItems = allCheckedElements;
         }
     }
 }

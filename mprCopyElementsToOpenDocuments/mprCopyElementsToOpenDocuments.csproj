@@ -52,9 +52,9 @@
     <Compile Include="Helpers\CustomCopyHandlerAbort.cs" />
     <Compile Include="Helpers\CustomCopyHandlerAllow.cs" />
     <Compile Include="Helpers\Logger.cs" />
+    <Compile Include="Helpers\RevitExternalEventHandler.cs" />
     <Compile Include="Helpers\RevitOperationService.cs" />
-    <Compile Include="Models\BrowserGeneralGroup.cs" />
-    <Compile Include="Models\BrowserItemsGroup.cs" />
+    <Compile Include="Models\GeneralItemsGroup.cs" />
     <Compile Include="Models\BrowserItem.cs" />
     <Compile Include="Models\Interfaces\IBrowserItem.cs" />
     <Compile Include="Models\Interfaces\IExpandableGroup.cs" />

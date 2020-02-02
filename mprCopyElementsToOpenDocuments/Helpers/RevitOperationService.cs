@@ -13,34 +13,33 @@
     /// </summary>
     public class RevitOperationService
     {
-        private const string ParamError = "Ошибка при получении элементов категории {0}.";
-        private const string ParamStart = "{0} - Начало операции сбора элементов модели.";
-        private const string ParamFinish = "{0} - Завершение операции сбора элементов модели.";
+        private const string ParamError = "{0} - Ошибка при получении элемента. Id: \"{1}\". Ошибка: \"{2}\"";
+        private const string ParamCollectingStart = "{0} - Начало операции сбора элементов модели ({1}).";
+        private const string ParamCollectingFinish = "{0} - Завершение операции сбора элементов модели ({1}).";
+        private const string ParamCollectingError = "{0} - Критическая ошибка в процессе операции сбора элементов модели ({1}).";
         private const string CopyStart = "{0} - Начало копирования элементов из документа \"{1}\" в документы \"{2}\".";
         private const string CopyFinish = "{0} - Завершение копирования элементов из документа \"{1}\" в документы \"{2}\".";
         private const string CopyElementError = "{0} - В процессе копирования элемента \"{1}\" категории \"{2}\" произошла ошибка: \"{3}\".";
         private const string CopyingOptions = "Настройки копирования элементов: \"{0}\".";
+        private const string CopyingNotShared = "{0} - В данном документе ({1}) отключен общий доступ. Копирование рабочих наборов не производится.";
         private const string WorksetsStr = "Рабочие наборы";
+        private const string TypeSuffix = " (Тип)";
+        private const string GeneralGroupTitle = "Все группы";
         private readonly UIApplication _uiApplication;
-        private readonly CopyPasteOptions _copyPasteOption = new CopyPasteOptions();
         private readonly List<Type> _elementTypes = new List<Type>
         {
             typeof(ExportDWGSettings), typeof(Material), typeof(ProjectInfo),
             typeof(ProjectLocation), typeof(SiteLocation), typeof(Revision),
             typeof(PhaseFilter), typeof(LinePatternElement), typeof(FillPatternElement),
             typeof(ParameterElement), typeof(SharedParameterElement), typeof(SunAndShadowSettings),
-            typeof(SpatialElement)
-        };
-
-        private readonly List<Type> _elementTypesWithoutCategories = new List<Type>
-        {
+            typeof(SpatialElement),
             typeof(BrowserOrganization), typeof(DimensionType), typeof(FillPatternElement),
             typeof(ParameterFilterElement), typeof(LinePatternElement), typeof(Family),
             typeof(PhaseFilter), typeof(PrintSetting), typeof(Revision),
             typeof(RevisionSettings), typeof(TextNoteType), typeof(ViewFamilyType)
         };
 
-        private readonly Dictionary<string, string> _specialTypeNames = new Dictionary<string, string>
+        private readonly Dictionary<string, string> _specialTypeCategoryNames = new Dictionary<string, string>
         {
             { nameof(BrowserOrganization), "Обозреватель" },
             { nameof(DimensionType), "Размеры" },
@@ -84,14 +83,13 @@
         /// Получает все элементы выбранного документа Revit
         /// </summary>
         /// <param name="revitDocument">Документ Revit для извлечения данных</param>
-        /// <returns></returns>
-        public BrowserGeneralGroup GetAllRevitElements(RevitDocument revitDocument)
+        /// <returns>Общая группа элементов в браузере</returns>
+        public GeneralItemsGroup GetAllRevitElements(RevitDocument revitDocument)
         {
-            Logger.Instance.Add(string.Format(ParamStart, DateTime.Now.ToLocalTime()));
+            Logger.Instance.Add(string.Format(ParamCollectingStart, DateTime.Now.ToLocalTime(), revitDocument.Title));
 
             try
             {
-                var groups = new List<BrowserItemsGroup>();
                 var allElements = new List<BrowserItem>();
 
                 var elementTypes = new FilteredElementCollector(revitDocument.Document)
@@ -99,54 +97,42 @@
                     .Where(e => e.Category != null && e.GetType() != typeof(ViewSheet))
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name + " (Тип)",
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name,
-                            true);
+                        try
+                        {
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category.Name + TypeSuffix,
+                                ((ElementType)e).FamilyName,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
-                var elementsWithoutCategories = new FilteredElementCollector(revitDocument.Document)
-                    .WherePasses(new ElementMulticlassFilter(_elementTypesWithoutCategories))
-                    .Select(e =>
-                    {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category?.Name ?? _specialTypeNames[e.GetType().Name],
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
-                    });
-
-                var searchedElementsWithCategory = new FilteredElementCollector(revitDocument.Document)
+                var elements = new FilteredElementCollector(revitDocument.Document)
                     .WherePasses(new ElementMulticlassFilter(_elementTypes))
-                    .Where(e => e.Category != null)
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name,
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
-                var searchedElementsWithoutCategory = new FilteredElementCollector(revitDocument.Document)
-                    .WherePasses(new ElementMulticlassFilter(_elementTypes))
-                    .Where(e => e.Category == null)
-                    .Select(e =>
-                    {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category?.Name ?? _specialTypeNames[e.GetType().Name],
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
-                    });
-
-                var specialCategories = new FilteredElementCollector(revitDocument.Document)
+                var specialCategoryElements = new FilteredElementCollector(revitDocument.Document)
                     .WherePasses(new LogicalOrFilter(new List<ElementFilter>
                     {
                         new ElementCategoryFilter(BuiltInCategory.OST_ColorFillSchema),
@@ -156,12 +142,20 @@
                     }))
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name,
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category.Name,
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
                 var viewTemplates = new FilteredElementCollector(revitDocument.Document)
@@ -169,12 +163,20 @@
                     .Where(e => ((View)e).IsTemplate)
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            "Виды (шаблоны)",
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                "Виды (шаблоны)",
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
                 var views = new FilteredElementCollector(revitDocument.Document)
@@ -183,13 +185,20 @@
                     .Where(e => !((View)e).IsTemplate)
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category?.Name ?? _specialTypeNames[e.GetType().Name],
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
                 var elevationMarkers = new FilteredElementCollector(revitDocument.Document)
@@ -198,12 +207,20 @@
                     .Where(e => ((ElevationMarker)e).CurrentViewCount > 0)
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name,
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category.Name,
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
                 var viewports = new FilteredElementCollector(revitDocument.Document)
@@ -211,12 +228,20 @@
                     .Where(e => ((ElementType)e).FamilyName == "Viewport")
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name,
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category.Name,
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
                 IEnumerable<BrowserItem> worksets = new List<BrowserItem>();
@@ -225,37 +250,44 @@
                     worksets = new FilteredWorksetCollector(revitDocument.Document)
                         .OfKind(WorksetKind.UserWorkset)
                         .Select(e =>
-                            new BrowserItem(
-                                e.Id.IntegerValue,
-                                WorksetsStr,
-                                "-",
-                                e.Name));
+                        {
+                            try
+                            {
+                                return new BrowserItem(
+                                    e.Id.IntegerValue,
+                                    WorksetsStr,
+                                    "-",
+                                    e.Name);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                                return null;
+                            }
+                        });
                 }
 
-                var grids = new FilteredElementCollector(revitDocument.Document)
-                    .OfClass(typeof(Grid))
+                var gridAndLevelFilter = new ElementMulticlassFilter(
+                    new List<Type> { typeof(Grid), typeof(Level) });
+                var gridsAndLevels = new FilteredElementCollector(revitDocument.Document)
+                    .WherePasses(gridAndLevelFilter)
                     .WhereElementIsNotElementType()
                     .Select(e =>
                     {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name,
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
-                    });
-
-                var levels = new FilteredElementCollector(revitDocument.Document)
-                    .OfClass(typeof(Level))
-                    .WhereElementIsNotElementType()
-                    .Select(e =>
-                    {
-                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                        return new BrowserItem(
-                            e.Id.IntegerValue,
-                            e.Category.Name,
-                            elementType != null ? elementType.FamilyName : "-",
-                            e.Name);
+                        try
+                        {
+                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
+                            return new BrowserItem(
+                                e.Id.IntegerValue,
+                                e.Category.Name,
+                                elementType != null ? elementType.FamilyName : string.Empty,
+                                e.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            return null;
+                        }
                     });
 
                 var parameters = new List<BrowserItem>();
@@ -265,20 +297,33 @@
                     definitionBindingMapIterator.Reset();
                     while (definitionBindingMapIterator.MoveNext())
                     {
-                        var key = (InternalDefinition)definitionBindingMapIterator.Key;
-                        var element = revitDocument.Document.GetElement(key.Id);
-                        var elementType = (ElementType)revitDocument.Document.GetElement(element.GetTypeId());
-                        parameters.Add(new BrowserItem(
-                                element.Id.IntegerValue,
-                                element.Category?.Name ?? _specialTypeNames[element.GetType().Name],
-                                elementType != null ? elementType.FamilyName : "-",
-                                element.Name));
+                        Element element = null;
+                        try
+                        {
+                            var key = (InternalDefinition)definitionBindingMapIterator.Key;
+                            element = revitDocument.Document.GetElement(key.Id);
+                            var elementType = (ElementType)revitDocument.Document.GetElement(element.GetTypeId());
+                            parameters.Add(new BrowserItem(
+                                    element.Id.IntegerValue,
+                                    element.Category?.Name ?? _specialTypeCategoryNames[element.GetType().Name],
+                                    elementType != null ? elementType.FamilyName : string.Empty,
+                                    element.Name));
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.Add(string.Format(
+                                ParamError,
+                                DateTime.Now.ToLocalTime(),
+                                element != null ? element.Id.IntegerValue.ToString() : "null",
+                                ex.Message));
+                            return null;
+                        }
                     }
                 }
 
-                var categoriesList = new List<BrowserItem>();
-                var categories = revitDocument.Document.Settings.Categories;
-                foreach (Category category in categories)
+                var categories = new List<BrowserItem>();
+                var categoriesList = revitDocument.Document.Settings.Categories;
+                foreach (Category category in categoriesList)
                 {
                     if (category.Id.IntegerValue > 0)
                         continue;
@@ -292,55 +337,64 @@
                         var element = revitDocument.Document.GetElement(subCategory.Id);
                         if (element != null)
                         {
-                            categoriesList.Add(new BrowserItem(element.Id.IntegerValue, "Категории", "-", element.Name));
+                            categories.Add(new BrowserItem(element.Id.IntegerValue, "Категории", string.Empty, element.Name));
                         }
                     }
                 }
 
                 allElements.AddRange(elementTypes);
-                allElements.AddRange(elementsWithoutCategories);
-                allElements.AddRange(searchedElementsWithCategory);
-                allElements.AddRange(searchedElementsWithoutCategory);
-                allElements.AddRange(specialCategories);
+                allElements.AddRange(elements);
+                allElements.AddRange(specialCategoryElements);
                 allElements.AddRange(viewTemplates);
                 allElements.AddRange(views);
                 allElements.AddRange(elevationMarkers);
                 allElements.AddRange(viewports);
                 allElements.AddRange(worksets);
-                allElements.AddRange(grids);
-                allElements.AddRange(levels);
+                allElements.AddRange(gridsAndLevels);
                 allElements.AddRange(parameters);
-                allElements.AddRange(categoriesList);
+                allElements.AddRange(categories);
 
-                var groupedElements = allElements
-                    .GroupBy(e => e.CategoryName);
-
-                foreach (var group in groupedElements)
+                var elementsGroupedByCategory = allElements
+                    .GroupBy(e => e.CategoryName)
+                    .ToList();
+                var categoryGroups = new List<BrowserItem>();
+                foreach (var categoryGroup in elementsGroupedByCategory)
                 {
-                    try
+                    var elementsGroupedByType = categoryGroup
+                        .GroupBy(e => e.FamilyName)
+                        .ToList();
+                    var typeGroups = new List<BrowserItem>();
+                    foreach (var typeGroup in elementsGroupedByType)
                     {
-                        var elementsList = group.Distinct(new BrowserItemEqualityComparer()).ToList();
+                        var instances = typeGroup.ToList();
+                        instances = instances.OrderBy(instance => instance.Name).ToList();
 
-                        groups.Add(new BrowserItemsGroup(group.Key, elementsList));
+                        if (string.IsNullOrEmpty(typeGroup.Key))
+                        {
+                            instances.ForEach(instance => typeGroups.Add(instance));
+                            continue;
+                        }
+
+                        typeGroups.Add(new BrowserItem(typeGroup.Key, instances));
                     }
-                    catch
-                    {
-                        Logger.Instance.Add(string.Format(ParamError, group.Key));
-                    }
+
+                    typeGroups = typeGroups.OrderBy(type => type.Name).ToList();
+                    categoryGroups.Add(new BrowserItem(categoryGroup.Key, typeGroups));
                 }
 
-                groups = groups.OrderBy(group => group.Name).ToList();
+                categoryGroups = categoryGroups.OrderBy(category => category.Name).ToList();
 
-                Logger.Instance.Add(string.Format(ParamFinish, DateTime.Now.ToLocalTime()));
+                Logger.Instance.Add(string.Format(ParamCollectingFinish, DateTime.Now.ToLocalTime(), revitDocument.Title));
                 Logger.Instance.Add("---------");
 
-                return new BrowserGeneralGroup("Все группы", groups);
+                return new GeneralItemsGroup(GeneralGroupTitle, categoryGroups);
             }
-            catch (Exception e)
+            catch
             {
-            }
+                Logger.Instance.Add(string.Format(ParamCollectingError, DateTime.Now.ToLocalTime(), revitDocument.Title));
 
-            return new BrowserGeneralGroup("Все группы", new List<BrowserItemsGroup>());
+                return new GeneralItemsGroup(GeneralGroupTitle, new List<BrowserItem>());
+            }
         }
 
         /// <summary>
@@ -350,24 +404,16 @@
         /// <param name="documentsTo">Список документов в которые осуществляется копирование</param>
         /// <param name="elements">Список элементов Revit</param>
         /// <param name="copyingOptions">Настройки копирования элементов</param>
-        public void CopyAllElements(
+        public void CopyElements(
             RevitDocument documentFrom,
-            List<RevitDocument> documentsTo,
-            List<IRevitElement> elements,
+            IEnumerable<RevitDocument> documentsTo,
+            IEnumerable<IRevitElement> elements,
             CopyingOptions copyingOptions)
         {
-            Logger.Instance.Add(string.Format(CopyStart, DateTime.Now.ToLocalTime(), documentFrom.Title, string.Join(", ", documentsTo)));
-            Logger.Instance.Add(string.Format(CopyingOptions, GetCopyingOptionsName(copyingOptions)));
+            var revitDocuments = documentsTo.ToList();
 
-            switch (copyingOptions)
-            {
-                case Helpers.CopyingOptions.AllowDuplicates:
-                    _copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAllow());
-                    break;
-                case Helpers.CopyingOptions.DisallowDuplicates:
-                    _copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAbort());
-                    break;
-            }
+            Logger.Instance.Add(string.Format(CopyStart, DateTime.Now.ToLocalTime(), documentFrom.Title, string.Join(", ", revitDocuments)));
+            Logger.Instance.Add(string.Format(CopyingOptions, GetCopyingOptionsName(copyingOptions)));
 
             foreach (var element in elements)
             {
@@ -375,11 +421,23 @@
                 {
                     var elementId = new ElementId(element.Id);
                     var revitElement = documentFrom.Document.GetElement(elementId);
+                    ICollection<ElementId> elementIds = new List<ElementId> { elementId };
 
-                    foreach (var documentTo in documentsTo)
+                    foreach (var documentTo in revitDocuments)
                     {
                         using (var transaction = new Transaction(documentTo.Document, "Копирование элементов"))
                         {
+                            var copyPasteOption = new CopyPasteOptions();
+                            switch (copyingOptions)
+                            {
+                                case Helpers.CopyingOptions.AllowDuplicates:
+                                    copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAllow());
+                                    break;
+                                case Helpers.CopyingOptions.DisallowDuplicates:
+                                    copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAbort());
+                                    break;
+                            }
+
                             transaction.Start();
 
                             try
@@ -388,17 +446,41 @@
                                 {
                                     Workset.Create(documentTo.Document, revitElement.Name);
                                 }
-                                else if (revitElement.GetType() == typeof(View))
+                                else
                                 {
-                                    // TODO: Logger event
+                                    Logger.Instance.Add(string.Format(CopyingNotShared, DateTime.Now.ToLocalTime(), documentTo.Title));
                                 }
 
-                                // TODO: General copying case
-                                ElementTransformUtils.CopyElement(documentTo.Document, elementId, null);
+                                if (revitElement is View view)
+                                {
+                                    // TODO: Logger event
+
+                                    ////ICollection<ElementId> relatedElementIds = new List<ElementId>();
+                                    ////foreach (Element element1 in new FilteredElementCollector(documentFrom.Document).OwnedByView(revitElement.Id))
+                                    ////{
+                                    ////    if (element1 is Viewport || element1 is View || element1 is SketchPlane || element1 is ReferencePlane || element1.Category == null || element1.Category.Id.IntegerValue == -2009611 || element1.Category.Id.IntegerValue == -2009612 || element1.Category.Id.IntegerValue == -2009610 || element1.Category.Id.IntegerValue == -2009609 || element1.Category.Id.IntegerValue == -2009609 || element1.Category.Id.IntegerValue == -2000530 || element1.Category.Name == "Sun Path" || element1 is SunAndShadowSettings)
+                                    ////    {
+                                    ////        continue;
+                                    ////    }
+
+                                    ////    relatedElementIds.Add(element1.Id);
+                                    ////}
+                                }
+
+                                ElementTransformUtils.CopyElements(
+                                    documentFrom.Document,
+                                    elementIds,
+                                    documentTo.Document,
+                                    null,
+                                    copyPasteOption);
                             }
                             catch (Exception e)
                             {
-                                Logger.Instance.Add(string.Format(CopyElementError, DateTime.Now.ToLocalTime(), "", "",
+                                Logger.Instance.Add(string.Format(
+                                    CopyElementError,
+                                    DateTime.Now.ToLocalTime(),
+                                    element.FamilyName,
+                                    element.CategoryName,
                                     e.Message));
                             }
 
@@ -408,12 +490,11 @@
                 }
                 catch (Exception e)
                 {
-                    Logger.Instance.Add(string.Format(CopyElementError, DateTime.Now.ToLocalTime(), "", "",
-                        e.Message));
+                    Logger.Instance.Add(string.Format(CopyElementError, DateTime.Now.ToLocalTime(), "", "", e.Message));
                 }
             }
 
-            Logger.Instance.Add(string.Format(CopyFinish, DateTime.Now.ToLocalTime(), documentFrom.Title, string.Join(", ", documentsTo)));
+            Logger.Instance.Add(string.Format(CopyFinish, DateTime.Now.ToLocalTime(), documentFrom.Title, string.Join(", ", revitDocuments)));
             Logger.Instance.Add("---------");
         }
 

@@ -19,10 +19,5 @@
         /// Имя семейства Revit
         /// </summary>
         string FamilyName { get; }
-
-        /// <summary>
-        /// Является ли элемент типом
-        /// </summary>
-        bool IsType { get; }
     }
 }

@@ -7,32 +7,32 @@
     using ModPlusAPI.Mvvm;
 
     /// <summary>
-    /// Группа элементов в браузере
+    /// Общая группа элементов в браузере
     /// </summary>
-    public class BrowserItemsGroup : VmBase, IBrowserItem, IExpandableGroup
+    public class GeneralItemsGroup : VmBase, IBrowserItem, IExpandableGroup
     {
         private bool? _checked = false;
-        private bool _isExpanded;
-        private ObservableCollection<BrowserItem> _items = new ObservableCollection<BrowserItem>();
+        private bool _isExpanded = true;
+        private ObservableCollection<BrowserItem> _groups = new ObservableCollection<BrowserItem>();
 
         /// <summary>
-        /// Создает экземпляр класса <see cref="BrowserItemsGroup"/>
+        /// Создает экземпляр класса <see cref="GeneralItemsGroup"/>
         /// </summary>
         /// <param name="name">Имя группы</param>
-        /// <param name="items">Список элементов группы</param>
-        public BrowserItemsGroup(string name, List<BrowserItem> items)
+        /// <param name="groups">Список групп элементов</param>
+        public GeneralItemsGroup(string name, List<BrowserItem> groups)
         {
             Name = name;
 
-            items.ForEach(item =>
+            groups.ForEach(group =>
             {
-                item.SelectionChanged += OnItemSelectionChanged;
-                _items.Add(item);
+                group.SelectionChanged += OnGroupSelectionChanged;
+                _groups.Add(group);
             });
         }
 
         /// <summary>
-        /// Событие выделения группы
+        /// Событие изменения количества выделенных элементов
         /// </summary>
         public event EventHandler SelectionChanged;
 
@@ -47,9 +47,9 @@
             {
                 _checked = value;
 
-                foreach (var item in _items)
+                foreach (var group in _groups)
                 {
-                    item.Checked = value;
+                    group.Checked = value;
                 }
 
                 OnPropertyChanged();
@@ -73,10 +73,10 @@
         /// </summary>
         public ObservableCollection<BrowserItem> Items
         {
-            get => _items;
+            get => _groups;
             set
             {
-                _items = value;
+                _groups = value;
                 OnPropertyChanged();
             }
         }
@@ -84,7 +84,7 @@
         /// <summary>
         /// Метод обработки выделения элементов в браузере
         /// </summary>
-        private void OnItemSelectionChanged(object sender, EventArgs e)
+        private void OnGroupSelectionChanged(object sender, EventArgs e)
         {
             OnSelectionChanged();
         }
