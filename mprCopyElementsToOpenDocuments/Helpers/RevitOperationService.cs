@@ -13,15 +13,15 @@
     /// </summary>
     public class RevitOperationService
     {
-        private const string ParamError = "{0} - Ошибка при получении элемента. Id: \"{1}\". Ошибка: \"{2}\"";
+        private const string ParamError = "{0} - ОШИБКА! В процессе получения элемента произошла ошибка. Id: \"{1}\". Ошибка: \"{2}\"";
         private const string ParamCollectingStart = "{0} - Начало операции сбора элементов модели ({1}).";
         private const string ParamCollectingFinish = "{0} - Завершение операции сбора элементов модели ({1}).";
-        private const string ParamCollectingError = "{0} - Критическая ошибка в процессе операции сбора элементов модели ({1}).";
+        private const string ParamCollectingError = "{0} - ОШИБКА! Критическая ошибка в процессе операции сбора элементов модели ({1}).";
         private const string CopyStart = "{0} - Начало копирования элементов из документа \"{1}\" в документы \"{2}\".";
         private const string CopyFinish = "{0} - Завершение копирования элементов из документа \"{1}\" в документы \"{2}\".";
-        private const string CopyElementError = "{0} - В процессе копирования элемента \"{1}\" категории \"{2}\" произошла ошибка: \"{3}\".";
+        private const string CopyElementError = "{0} - ОШИБКА! В процессе копирования элемента \"{1}\" категории \"{2}\" произошла ошибка: \"{3}\".";
         private const string CopyingOptions = "Настройки копирования элементов: \"{0}\".";
-        private const string CopyingNotShared = "{0} - В данном документе ({1}) отключен общий доступ. Копирование рабочих наборов не производится.";
+        private const string CopyingNotShared = "{0} - ПРЕДУПРЕЖДЕНИЕ! В данном документе ({1}) отключен общий доступ. Копирование рабочих наборов не производится.";
         private const string WorksetsStr = "Рабочие наборы";
         private const string TypeSuffix = " (Тип)";
         private const string GeneralGroupTitle = "Все группы";
@@ -29,10 +29,8 @@
         private readonly List<Type> _elementTypes = new List<Type>
         {
             typeof(ExportDWGSettings), typeof(Material), typeof(ProjectInfo),
-            typeof(ProjectLocation), typeof(SiteLocation), typeof(Revision),
-            typeof(PhaseFilter), typeof(LinePatternElement), typeof(FillPatternElement),
-            typeof(ParameterElement), typeof(SharedParameterElement), typeof(SunAndShadowSettings),
-            typeof(SpatialElement),
+            typeof(ProjectLocation), typeof(SiteLocation), typeof(ParameterElement), 
+            typeof(SharedParameterElement), typeof(SunAndShadowSettings), typeof(SpatialElement),
             typeof(BrowserOrganization), typeof(DimensionType), typeof(FillPatternElement),
             typeof(ParameterFilterElement), typeof(LinePatternElement), typeof(Family),
             typeof(PhaseFilter), typeof(PrintSetting), typeof(Revision),
@@ -407,13 +405,19 @@
         public void CopyElements(
             RevitDocument documentFrom,
             IEnumerable<RevitDocument> documentsTo,
-            IEnumerable<IRevitElement> elements,
+            IEnumerable<BrowserItem> elements,
             CopyingOptions copyingOptions)
         {
             var revitDocuments = documentsTo.ToList();
 
-            Logger.Instance.Add(string.Format(CopyStart, DateTime.Now.ToLocalTime(), documentFrom.Title, string.Join(", ", revitDocuments)));
-            Logger.Instance.Add(string.Format(CopyingOptions, GetCopyingOptionsName(copyingOptions)));
+            Logger.Instance.Add(string.Format(
+                CopyStart,
+                DateTime.Now.ToLocalTime(),
+                documentFrom.Title,
+                string.Join(", ", revitDocuments.Select(doc => doc.Title))));
+            Logger.Instance.Add(string.Format(
+                CopyingOptions,
+                GetCopyingOptionsName(copyingOptions)));
 
             foreach (var element in elements)
             {
@@ -442,44 +446,34 @@
 
                             try
                             {
-                                if (revitElement.GetType() == typeof(Workset) && documentTo.Document.IsWorkshared)
+                                if (revitElement.GetType() == typeof(Workset))
                                 {
-                                    Workset.Create(documentTo.Document, revitElement.Name);
-                                }
-                                else
-                                {
-                                    Logger.Instance.Add(string.Format(CopyingNotShared, DateTime.Now.ToLocalTime(), documentTo.Title));
-                                }
-
-                                if (revitElement is View view)
-                                {
-                                    // TODO: Logger event
-
-                                    ////ICollection<ElementId> relatedElementIds = new List<ElementId>();
-                                    ////foreach (Element element1 in new FilteredElementCollector(documentFrom.Document).OwnedByView(revitElement.Id))
-                                    ////{
-                                    ////    if (element1 is Viewport || element1 is View || element1 is SketchPlane || element1 is ReferencePlane || element1.Category == null || element1.Category.Id.IntegerValue == -2009611 || element1.Category.Id.IntegerValue == -2009612 || element1.Category.Id.IntegerValue == -2009610 || element1.Category.Id.IntegerValue == -2009609 || element1.Category.Id.IntegerValue == -2009609 || element1.Category.Id.IntegerValue == -2000530 || element1.Category.Name == "Sun Path" || element1 is SunAndShadowSettings)
-                                    ////    {
-                                    ////        continue;
-                                    ////    }
-
-                                    ////    relatedElementIds.Add(element1.Id);
-                                    ////}
+                                    if (documentTo.Document.IsWorkshared)
+                                    {
+                                        Workset.Create(documentTo.Document, revitElement.Name);
+                                    }
+                                    else
+                                    {
+                                        Logger.Instance.Add(string.Format(
+                                            CopyingNotShared,
+                                            DateTime.Now.ToLocalTime(),
+                                            documentTo.Title));
+                                    }
                                 }
 
                                 ElementTransformUtils.CopyElements(
-                                    documentFrom.Document,
-                                    elementIds,
-                                    documentTo.Document,
-                                    null,
-                                    copyPasteOption);
+                                documentFrom.Document,
+                                elementIds,
+                                documentTo.Document,
+                                null,
+                                copyPasteOption);
                             }
                             catch (Exception e)
                             {
                                 Logger.Instance.Add(string.Format(
                                     CopyElementError,
                                     DateTime.Now.ToLocalTime(),
-                                    element.FamilyName,
+                                    element.Name,
                                     element.CategoryName,
                                     e.Message));
                             }
@@ -490,11 +484,20 @@
                 }
                 catch (Exception e)
                 {
-                    Logger.Instance.Add(string.Format(CopyElementError, DateTime.Now.ToLocalTime(), "", "", e.Message));
+                    Logger.Instance.Add(string.Format(
+                        CopyElementError,
+                        DateTime.Now.ToLocalTime(),
+                        element.Name,
+                        element.CategoryName,
+                        e.Message));
                 }
             }
 
-            Logger.Instance.Add(string.Format(CopyFinish, DateTime.Now.ToLocalTime(), documentFrom.Title, string.Join(", ", revitDocuments)));
+            Logger.Instance.Add(string.Format(
+                CopyFinish,
+                DateTime.Now.ToLocalTime(),
+                documentFrom.Title,
+                string.Join(", ", revitDocuments.Select(doc => doc.Title))));
             Logger.Instance.Add("---------");
         }
 

@@ -17,8 +17,6 @@
     public class MainViewModel : VmBase
     {
         private readonly RevitOperationService _revitOperationService;
-        private string _currentLogState = string.Empty;
-        private MainView _mainView;
         private RevitDocument _fromDocument;
         private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
         private List<BrowserItem> _selectedItems = new List<BrowserItem>();
@@ -30,11 +28,10 @@
         /// Создает экземпляр класса <see cref="MainViewModel"/>
         /// </summary>
         /// <param name="uiApplication">Активная сессия пользовательского интерфейса Revit</param>
-        /// <param name="mainView">Главное окно плагина</param>
-        public MainViewModel(UIApplication uiApplication, MainView mainView)
+        public MainViewModel(UIApplication uiApplication)
         {
             _revitOperationService = new RevitOperationService(uiApplication);
-            _mainView = mainView;
+            RevitExternalEventHandler.Init();
 
             var docs = _revitOperationService.GetAllDocuments();
             foreach (var doc in docs)
@@ -103,19 +100,6 @@
         /// </summary>
         public ICommand OpenLogCommand =>
             new RelayCommandWithoutParameter(OpenLog);
-
-        /// <summary>
-        /// Текущее состояние журнала событий
-        /// </summary>
-        public string CurrentLogState
-        {
-            get => _currentLogState;
-            set
-            {
-                _currentLogState = value;
-                OnPropertyChanged();
-            }
-        }
 
         /// <summary>
         /// Настройки копирования элементов
@@ -255,7 +239,6 @@
             }
         }
 
-
         /// <summary>
         /// Изменяет текущие настройки копирования
         /// </summary>
@@ -314,11 +297,15 @@
         /// </summary>
         private void StartCopying()
         {
-            _revitOperationService.CopyElements(
-                FromDocument,
-                ToDocuments,
-                SelectedItems,
-                CopyingOptions);
+            RevitExternalEventHandler.Instance.Run(
+                () =>
+                {
+                    _revitOperationService.CopyElements(
+                            FromDocument,
+                            ToDocuments,
+                            SelectedItems,
+                            CopyingOptions);
+                }, true);
         }
 
         /// <summary>
@@ -337,8 +324,8 @@
         /// </summary>
         private void OpenLog()
         {
-            var loggerView = new LoggerView { DataContext = this };
-            CurrentLogState = string.Join(Environment.NewLine, Logger.Instance);
+            var loggerViewModel = new LoggerViewModel();
+            var loggerView = new LoggerView { DataContext = loggerViewModel };
             loggerView.Show();
         }
 
