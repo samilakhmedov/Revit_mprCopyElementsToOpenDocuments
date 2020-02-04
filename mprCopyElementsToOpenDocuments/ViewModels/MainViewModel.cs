@@ -1,4 +1,4 @@
-﻿namespace mprCopyElementsToOpenDocuments.ViewModels
+namespace mprCopyElementsToOpenDocuments.ViewModels
 {
     using System;
     using System.Collections.Generic;
@@ -344,7 +344,9 @@
                     {
                         if (typeGroup.Items.Any())
                         {
-                            allCheckedElements.AddRange(typeGroup.Items.Where(instance => instance.Checked == true));
+                            allCheckedElements.AddRange(
+                                typeGroup.Items
+                                    .Where(instance => instance.Checked == true));
                         }
                         else
                         {

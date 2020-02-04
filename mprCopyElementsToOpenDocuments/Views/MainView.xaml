@@ -152,9 +152,11 @@
                         </Grid>
                     </GroupBox>
                     <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Command="{Binding Path=OpenLogCommand}">Журнал работы</Button>
+                            Command="{Binding Path=OpenLogCommand}"
+                            Content="Журнал работы"/>
                     <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Command="{Binding Path=StartCopyingCommand}">Выполнить копирование</Button>
+                            Command="{Binding Path=StartCopyingCommand}"
+                            Content="Выполнить копирование"/>
                 </Grid>
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions>

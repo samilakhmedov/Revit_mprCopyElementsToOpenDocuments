@@ -1,4 +1,4 @@
-﻿namespace mprCopyElementsToOpenDocuments.Helpers
+namespace mprCopyElementsToOpenDocuments.Helpers
 {
     using System;
     using System.Collections.Generic;
@@ -29,7 +29,7 @@
         private readonly List<Type> _elementTypes = new List<Type>
         {
             typeof(ExportDWGSettings), typeof(Material), typeof(ProjectInfo),
-            typeof(ProjectLocation), typeof(SiteLocation), typeof(ParameterElement), 
+            typeof(ProjectLocation), typeof(SiteLocation), typeof(ParameterElement),
             typeof(SharedParameterElement), typeof(SunAndShadowSettings), typeof(SpatialElement),
             typeof(BrowserOrganization), typeof(DimensionType), typeof(FillPatternElement),
             typeof(ParameterFilterElement), typeof(LinePatternElement), typeof(Family),
