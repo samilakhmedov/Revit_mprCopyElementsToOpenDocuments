@@ -1,4 +1,4 @@
-namespace mprCopyElementsToOpenDocuments.ViewModels
+﻿namespace mprCopyElementsToOpenDocuments.ViewModels
 {
     using System;
     using System.Collections.Generic;
@@ -17,6 +17,9 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
     public class MainViewModel : VmBase
     {
         private readonly RevitOperationService _revitOperationService;
+        private int _passedElements;
+        private int _totalElements = 1;
+        private bool _isWorking;
         private RevitDocument _fromDocument;
         private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
         private List<BrowserItem> _selectedItems = new List<BrowserItem>();
@@ -31,7 +34,8 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
         public MainViewModel(UIApplication uiApplication)
         {
             _revitOperationService = new RevitOperationService(uiApplication);
-            RevitExternalEventHandler.Init();
+            _revitOperationService.PassedElementsCountChanged +=
+                RevitOperationServiceOnPassedElementsCountChanged;
 
             var docs = _revitOperationService.GetAllDocuments();
             foreach (var doc in docs)
@@ -102,6 +106,38 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
             new RelayCommandWithoutParameter(OpenLog);
 
         /// <summary>
+        /// Команда остановки процесса копирования
+        /// </summary>
+        public ICommand StopCopyingCommand =>
+            new RelayCommandWithoutParameter(StopCopying);
+
+        /// <summary>
+        /// Количество скопированных элементов
+        /// </summary>
+        public int PassedElements
+        {
+            get => _passedElements;
+            set
+            {
+                _passedElements = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Общее количество элементов для копирования
+        /// </summary>
+        public int TotalElements
+        {
+            get => _totalElements;
+            set
+            {
+                _totalElements = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
         /// Настройки копирования элементов
         /// </summary>
         public CopyingOptions CopyingOptions
@@ -154,7 +190,7 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
         }
 
         /// <summary>
-        /// Документ Revit из которого производится копирование элементов
+        /// Документы Revit в которые осуществляется копирование элементов
         /// </summary>
         public ObservableCollection<RevitDocument> ToDocuments
         {
@@ -271,6 +307,7 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
             GeneralGroups.Add(generalGroup);
             ToDocuments.Clear();
             SelectedItems.Clear();
+            TotalElements = 1;
             OnPropertyChanged(nameof(SelectedItems));
 
             foreach (var doc in Documents)
@@ -297,15 +334,16 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
         /// </summary>
         private void StartCopying()
         {
-            RevitExternalEventHandler.Instance.Run(
-                () =>
-                {
-                    _revitOperationService.CopyElements(
+            _isWorking = true;
+            TotalElements = SelectedItems.Any()
+                ? SelectedItems.Count * ToDocuments.Count(doc => doc.Selected)
+                : 1;
+
+            _revitOperationService.CopyElements(
                             FromDocument,
-                            ToDocuments,
+                            ToDocuments.Where(doc => doc.Selected),
                             SelectedItems,
                             CopyingOptions);
-                }, true);
         }
 
         /// <summary>
@@ -316,7 +354,8 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
         {
             return SelectedItems.Count > 0
                    && FromDocument != null
-                   && ToDocuments.Any(doc => doc.Selected);
+                   && ToDocuments.Any(doc => doc.Selected) 
+                   && !_isWorking;
         }
 
         /// <summary>
@@ -327,6 +366,14 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
             var loggerViewModel = new LoggerViewModel();
             var loggerView = new LoggerView { DataContext = loggerViewModel };
             loggerView.Show();
+        }
+
+        /// <summary>
+        /// Остановка операции копирования
+        /// </summary>
+        private void StopCopying()
+        {
+            _revitOperationService.StopCopyingOperation();
         }
 
         /// <summary>
@@ -358,6 +405,24 @@ namespace mprCopyElementsToOpenDocuments.ViewModels
             }
 
             SelectedItems = allCheckedElements;
+        }
+
+        /// <summary>
+        /// Метод обработки события изменения
+        /// количества элементов, прошедших проверку
+        /// </summary>
+        private void RevitOperationServiceOnPassedElementsCountChanged(object sender, bool e)
+        {
+            if (e)
+            {
+                _isWorking = false;
+                PassedElements = 0;
+                TotalElements = 1;
+            }
+            else
+            {
+                PassedElements++;
+            }
         }
     }
 }

@@ -12,6 +12,8 @@
     /// </summary>
     public class LoggerViewModel : VmBase
     {
+        private const string LangItem = "mprCopyElementsToOpenDocuments";
+
         /// <summary>
         /// Команда обработки выбранного документа Revit
         /// </summary>
@@ -32,7 +34,7 @@
             {
                 Filter = "Text file (*.txt)|*.txt",
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                FileName = "Журнал работы"
+                FileName = ModPlusAPI.Language.GetItem(LangItem, "h5")
             };
 
             if (saveFileDialog.ShowDialog() == true)

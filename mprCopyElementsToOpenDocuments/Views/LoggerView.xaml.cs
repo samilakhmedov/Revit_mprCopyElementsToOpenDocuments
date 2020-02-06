@@ -11,8 +11,7 @@
         public LoggerView()
         {
             InitializeComponent();
-            Title = "Журнал работы";
-            ////Title = ModPlusAPI.Language.GetFunctionLocalName(ModPlusConnector.Instance.Name, ModPlusConnector.Instance.LName);
+            Title = ModPlusAPI.Language.GetItem("mprCopyElementsToOpenDocuments", "h5");
         }
     }
 }

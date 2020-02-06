@@ -17,15 +17,15 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/ModPlusStyle;component/Styles/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <XmlDataProvider x:Key="Lang" Source="C:/Projects/ru-RU.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
+            <XmlDataProvider x:Key="Lang" Source="C:/Projects/Core_LanguageFiles/LanguageFiles/en-US.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
 
             <Style x:Key="ImgButton" TargetType="{x:Type Button}">
-                <Setter Property="Width" Value="25"></Setter>
-                <Setter Property="Height" Value="25"></Setter>
-                <Setter Property="Margin" Value="0"></Setter>
-                <Setter Property="Padding" Value="0"></Setter>
-                <Setter Property="Background" Value="Transparent"></Setter>
-                <Setter Property="BorderThickness" Value="0"></Setter>
+                <Setter Property="Width" Value="25"/>
+                <Setter Property="Height" Value="25"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
             </Style>
             <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
                 <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -77,7 +77,8 @@
         <Grid Grid.Row="1" Margin="15">
             <Grid.RowDefinitions>
                 <RowDefinition Height="0.6*"/>
-                <RowDefinition Height="0.4*"/>
+                <RowDefinition Height="0.38*"/>
+                <RowDefinition Height="0.02*"/>
             </Grid.RowDefinitions>
             <TreeView Grid.Row="0"
                       ItemsSource="{Binding Path=GeneralGroups}"
@@ -110,19 +111,19 @@
                         <RowDefinition Height="0.15*"/>
                         <RowDefinition Height="0.15*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="Выбрано элементов:"
+                    <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h1}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <TextBlock Grid.Row="1" Margin="5 0 0 0" FontSize="22" FontWeight="Bold" Text="{Binding Path=SelectedItems.Count, Mode=OneWay}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <GroupBox Grid.Row="2" Header="Опции копирования">
+                    <GroupBox Grid.Row="2" Header="{Binding Source={StaticResource Lang}, XPath=h4}">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition></RowDefinition>
-                                <RowDefinition></RowDefinition>
-                                <RowDefinition></RowDefinition>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
                             </Grid.RowDefinitions>
                             <RadioButton Grid.Row="0" Margin="0"
-                                         Name="AllowDuplicate" Content="Разрешить дублирование"
+                                         Name="AllowDuplicate" Content="{Binding Source={StaticResource Lang}, XPath=co1}"
                                          IsChecked="True">
                                 <b:Interaction.Triggers>
                                     <b:EventTrigger EventName="Checked">
@@ -132,7 +133,7 @@
                                 </b:Interaction.Triggers>
                             </RadioButton>
                             <RadioButton Grid.Row="1" Margin="0"
-                                         Name="DisallowDuplicate" Content="Запретить дублирование">
+                                         Name="DisallowDuplicate" Content="{Binding Source={StaticResource Lang}, XPath=co2}">
                                 <b:Interaction.Triggers>
                                     <b:EventTrigger EventName="Checked">
                                         <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
@@ -141,7 +142,7 @@
                                 </b:Interaction.Triggers>
                             </RadioButton>
                             <RadioButton Grid.Row="2" Margin="0"
-                                         Name="AskUser" Content="Запросить разрешение">
+                                         Name="AskUser" Content="{Binding Source={StaticResource Lang}, XPath=co3}">
                                 <b:Interaction.Triggers>
                                     <b:EventTrigger EventName="Checked">
                                         <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
@@ -153,10 +154,10 @@
                     </GroupBox>
                     <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Command="{Binding Path=OpenLogCommand}"
-                            Content="Журнал работы"/>
+                            Content="{Binding Source={StaticResource Lang}, XPath=h5}"/>
                     <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Command="{Binding Path=StartCopyingCommand}"
-                            Content="Выполнить копирование"/>
+                            Content="{Binding Source={StaticResource Lang}, XPath=h6}"/>
                 </Grid>
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
@@ -165,7 +166,7 @@
                         <RowDefinition Height="0.1*"/>
                         <RowDefinition Height="0.7*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="Из проекта:"
+                    <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h2}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <ComboBox Grid.Row="1" Margin="5 0 5 0"
                               ItemsSource="{Binding Path=Documents, Mode=OneWay}"
@@ -183,7 +184,7 @@
                             </b:EventTrigger>
                         </b:Interaction.Triggers>
                     </ComboBox>
-                    <TextBlock Grid.Row="2" Margin="5 0 0 0" FontSize="14" Text="В проект:"
+                    <TextBlock Grid.Row="2" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h3}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <ListBox Grid.Row="3"
                              ItemsSource="{Binding Path=ToDocuments, Mode=OneWay}">
@@ -200,6 +201,8 @@
                     </ListBox>
                 </Grid>
             </Grid>
+            <ProgressBar Grid.Row="2" Maximum="{Binding Path=TotalElements}"
+                         Value ="{Binding Path=PassedElements}"/>
         </Grid>
     </Grid>
 </mps:ModPlusWindow>

@@ -1,30 +1,19 @@
-namespace mprCopyElementsToOpenDocuments.Helpers
+﻿namespace mprCopyElementsToOpenDocuments.Helpers
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Models;
-    using Models.Interfaces;
 
     /// <summary>
     /// Сервис работы с Revit
     /// </summary>
     public class RevitOperationService
     {
-        private const string ParamError = "{0} - ОШИБКА! В процессе получения элемента произошла ошибка. Id: \"{1}\". Ошибка: \"{2}\"";
-        private const string ParamCollectingStart = "{0} - Начало операции сбора элементов модели ({1}).";
-        private const string ParamCollectingFinish = "{0} - Завершение операции сбора элементов модели ({1}).";
-        private const string ParamCollectingError = "{0} - ОШИБКА! Критическая ошибка в процессе операции сбора элементов модели ({1}).";
-        private const string CopyStart = "{0} - Начало копирования элементов из документа \"{1}\" в документы \"{2}\".";
-        private const string CopyFinish = "{0} - Завершение копирования элементов из документа \"{1}\" в документы \"{2}\".";
-        private const string CopyElementError = "{0} - ОШИБКА! В процессе копирования элемента \"{1}\" категории \"{2}\" произошла ошибка: \"{3}\".";
-        private const string CopyingOptions = "Настройки копирования элементов: \"{0}\".";
-        private const string CopyingNotShared = "{0} - ПРЕДУПРЕЖДЕНИЕ! В данном документе ({1}) отключен общий доступ. Копирование рабочих наборов не производится.";
-        private const string WorksetsStr = "Рабочие наборы";
-        private const string TypeSuffix = " (Тип)";
-        private const string GeneralGroupTitle = "Все группы";
+        private const string LangItem = "mprCopyElementsToOpenDocuments";
         private readonly UIApplication _uiApplication;
         private readonly List<Type> _elementTypes = new List<Type>
         {
@@ -39,23 +28,26 @@ namespace mprCopyElementsToOpenDocuments.Helpers
 
         private readonly Dictionary<string, string> _specialTypeCategoryNames = new Dictionary<string, string>
         {
-            { nameof(BrowserOrganization), "Обозреватель" },
-            { nameof(DimensionType), "Размеры" },
-            { nameof(SpotDimensionType), "Размеры" },
-            { nameof(FillPatternElement), "Штриховки" },
-            { nameof(ParameterFilterElement), "Фильтры параметров" },
-            { nameof(LinePatternElement), "Типы линий" },
-            { nameof(Family), "Загружаемые семейства" },
-            { nameof(PhaseFilter), "Фильтры стадии" },
-            { nameof(PrintSetting), "Настройки печати" },
-            { nameof(Revision), "Изменения" },
-            { nameof(RevisionSettings), "Настройки изменений" },
-            { nameof(TextNoteType), "Стили текста" },
-            { nameof(ViewFamilyType), "Типы семейств видов" },
-            { nameof(View), "Виды" },
-            { nameof(ParameterElement), "Параметры" },
-            { nameof(SharedParameterElement), "Общие параметры" }
+            { nameof(BrowserOrganization), ModPlusAPI.Language.GetItem(LangItem, "m12") },
+            { nameof(DimensionType), ModPlusAPI.Language.GetItem(LangItem, "m13") },
+            { nameof(SpotDimensionType), ModPlusAPI.Language.GetItem(LangItem, "m13") },
+            { nameof(FillPatternElement), ModPlusAPI.Language.GetItem(LangItem, "m14") },
+            { nameof(ParameterFilterElement), ModPlusAPI.Language.GetItem(LangItem, "m15") },
+            { nameof(LinePatternElement), ModPlusAPI.Language.GetItem(LangItem, "m16") },
+            { nameof(Family), ModPlusAPI.Language.GetItem(LangItem, "m17") },
+            { nameof(PhaseFilter), ModPlusAPI.Language.GetItem(LangItem, "m18") },
+            { nameof(PrintSetting), ModPlusAPI.Language.GetItem(LangItem, "m19") },
+            { nameof(Revision), ModPlusAPI.Language.GetItem(LangItem, "m20") },
+            { nameof(RevisionSettings), ModPlusAPI.Language.GetItem(LangItem, "m21") },
+            { nameof(TextNoteType), ModPlusAPI.Language.GetItem(LangItem, "m22") },
+            { nameof(ViewFamilyType), ModPlusAPI.Language.GetItem(LangItem, "m23") },
+            { nameof(View), ModPlusAPI.Language.GetItem(LangItem, "m24") },
+            { nameof(ParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m25") },
+            { nameof(SharedParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m26") }
         };
+
+        private bool _stopCopyingOperation;
+        private int _passedElements;
 
         /// <summary>
         /// Создает экземпляр класса <see cref="UIApplication"/>
@@ -64,6 +56,20 @@ namespace mprCopyElementsToOpenDocuments.Helpers
         public RevitOperationService(UIApplication uiApplication)
         {
             _uiApplication = uiApplication;
+            uiApplication.Application.FailuresProcessing += Application_FailuresProcessing;
+        }
+
+        /// <summary>
+        /// Событие изменения количества элементов, прошедших проверку
+        /// </summary>
+        public event EventHandler<bool> PassedElementsCountChanged;
+
+        /// <summary>
+        /// Метод остановки операции копирования
+        /// </summary>
+        public void StopCopyingOperation()
+        {
+            _stopCopyingOperation = true;
         }
 
         /// <summary>
@@ -84,7 +90,11 @@ namespace mprCopyElementsToOpenDocuments.Helpers
         /// <returns>Общая группа элементов в браузере</returns>
         public GeneralItemsGroup GetAllRevitElements(RevitDocument revitDocument)
         {
-            Logger.Instance.Add(string.Format(ParamCollectingStart, DateTime.Now.ToLocalTime(), revitDocument.Title));
+            Logger.Instance.Add(
+                string.Format(
+                    ModPlusAPI.Language.GetItem(LangItem, "m2"),
+                    DateTime.Now.ToLocalTime(),
+                    revitDocument.Title));
 
             try
             {
@@ -99,13 +109,18 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         {
                             return new BrowserItem(
                                 e.Id.IntegerValue,
-                                e.Category.Name + TypeSuffix,
+                                e.Category.Name + ModPlusAPI.Language.GetItem(LangItem, "m11"),
                                 ((ElementType)e).FamilyName,
                                 e.Name);
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -125,7 +140,12 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -151,7 +171,12 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -166,13 +191,18 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                             var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                             return new BrowserItem(
                                 e.Id.IntegerValue,
-                                "Виды (шаблоны)",
+                                ModPlusAPI.Language.GetItem(LangItem, "m29"),
                                 elementType != null ? elementType.FamilyName : string.Empty,
                                 e.Name);
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -194,7 +224,12 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -216,7 +251,12 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -237,7 +277,12 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -253,13 +298,18 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                             {
                                 return new BrowserItem(
                                     e.Id.IntegerValue,
-                                    WorksetsStr,
+                                    ModPlusAPI.Language.GetItem(LangItem, "m10"),
                                     "-",
                                     e.Name);
                             }
                             catch (Exception ex)
                             {
-                                Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                                Logger.Instance.Add(
+                                    string.Format(
+                                        ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                        DateTime.Now.ToLocalTime(),
+                                        e.Id.IntegerValue,
+                                        ex.Message));
                                 return null;
                             }
                         });
@@ -283,7 +333,12 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Instance.Add(string.Format(ParamError, DateTime.Now.ToLocalTime(), e.Id.IntegerValue, ex.Message));
+                            Logger.Instance.Add(
+                                string.Format(
+                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                    DateTime.Now.ToLocalTime(),
+                                    e.Id.IntegerValue,
+                                    ex.Message));
                             return null;
                         }
                     });
@@ -310,7 +365,7 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         catch (Exception ex)
                         {
                             Logger.Instance.Add(string.Format(
-                                ParamError,
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
                                 DateTime.Now.ToLocalTime(),
                                 element != null ? element.Id.IntegerValue.ToString() : "null",
                                 ex.Message));
@@ -335,7 +390,11 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                         var element = revitDocument.Document.GetElement(subCategory.Id);
                         if (element != null)
                         {
-                            categories.Add(new BrowserItem(element.Id.IntegerValue, "Категории", string.Empty, element.Name));
+                            categories.Add(new BrowserItem(
+                                element.Id.IntegerValue,
+                                ModPlusAPI.Language.GetItem(LangItem, "m26"),
+                                string.Empty,
+                                element.Name));
                         }
                     }
                 }
@@ -382,16 +441,28 @@ namespace mprCopyElementsToOpenDocuments.Helpers
 
                 categoryGroups = categoryGroups.OrderBy(category => category.Name).ToList();
 
-                Logger.Instance.Add(string.Format(ParamCollectingFinish, DateTime.Now.ToLocalTime(), revitDocument.Title));
+                Logger.Instance.Add(
+                    string.Format(
+                        ModPlusAPI.Language.GetItem(LangItem, "m3"),
+                        DateTime.Now.ToLocalTime(),
+                        revitDocument.Title));
                 Logger.Instance.Add("---------");
 
-                return new GeneralItemsGroup(GeneralGroupTitle, categoryGroups);
+                return new GeneralItemsGroup(
+                    ModPlusAPI.Language.GetItem(LangItem, "m28"),
+                    categoryGroups);
             }
             catch
             {
-                Logger.Instance.Add(string.Format(ParamCollectingError, DateTime.Now.ToLocalTime(), revitDocument.Title));
+                Logger.Instance.Add(
+                    string.Format(
+                        ModPlusAPI.Language.GetItem(LangItem, "m4"),
+                        DateTime.Now.ToLocalTime(),
+                        revitDocument.Title));
 
-                return new GeneralItemsGroup(GeneralGroupTitle, new List<BrowserItem>());
+                return new GeneralItemsGroup(
+                    ModPlusAPI.Language.GetItem(LangItem, "m28"),
+                    new List<BrowserItem>());
             }
         }
 
@@ -402,46 +473,60 @@ namespace mprCopyElementsToOpenDocuments.Helpers
         /// <param name="documentsTo">Список документов в которые осуществляется копирование</param>
         /// <param name="elements">Список элементов Revit</param>
         /// <param name="copyingOptions">Настройки копирования элементов</param>
-        public void CopyElements(
+        public async void CopyElements(
             RevitDocument documentFrom,
             IEnumerable<RevitDocument> documentsTo,
-            IEnumerable<BrowserItem> elements,
+            List<BrowserItem> elements,
             CopyingOptions copyingOptions)
         {
             var revitDocuments = documentsTo.ToList();
 
             Logger.Instance.Add(string.Format(
-                CopyStart,
+                ModPlusAPI.Language.GetItem(LangItem, "m5"),
                 DateTime.Now.ToLocalTime(),
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
             Logger.Instance.Add(string.Format(
-                CopyingOptions,
+                ModPlusAPI.Language.GetItem(LangItem, "m8"),
                 GetCopyingOptionsName(copyingOptions)));
 
-            foreach (var element in elements)
+            var copyPasteOption = new CopyPasteOptions();
+            switch (copyingOptions)
             {
-                try
+                case Helpers.CopyingOptions.AllowDuplicates:
+                    copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAllow());
+                    break;
+                case Helpers.CopyingOptions.DisallowDuplicates:
+                    copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAbort());
+                    break;
+            }
+
+            foreach (var documentTo in revitDocuments)
+            {
+                foreach (var element in elements)
                 {
-                    var elementId = new ElementId(element.Id);
-                    var revitElement = documentFrom.Document.GetElement(elementId);
-                    ICollection<ElementId> elementIds = new List<ElementId> { elementId };
-
-                    foreach (var documentTo in revitDocuments)
+                    try
                     {
-                        using (var transaction = new Transaction(documentTo.Document, "Копирование элементов"))
+                        await Task.Delay(100).ConfigureAwait(true);
+                        _passedElements++;
+                        if (_passedElements == elements.Count * revitDocuments.Count)
                         {
-                            var copyPasteOption = new CopyPasteOptions();
-                            switch (copyingOptions)
-                            {
-                                case Helpers.CopyingOptions.AllowDuplicates:
-                                    copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAllow());
-                                    break;
-                                case Helpers.CopyingOptions.DisallowDuplicates:
-                                    copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAbort());
-                                    break;
-                            }
+                            OnPassedElementsCountChanged(true);
+                            _passedElements = 0;
+                        }
+                        else
+                        {
+                            OnPassedElementsCountChanged(false);
+                        }
 
+                        var elementId = new ElementId(element.Id);
+                        var revitElement = documentFrom.Document.GetElement(elementId);
+                        ICollection<ElementId> elementIds = new List<ElementId> { elementId };
+
+                        using (var transaction = new Transaction(
+                            documentTo.Document,
+                            ModPlusAPI.Language.GetItem(LangItem, "m27")))
+                        {
                             transaction.Start();
 
                             try
@@ -455,10 +540,16 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                                     else
                                     {
                                         Logger.Instance.Add(string.Format(
-                                            CopyingNotShared,
+                                            ModPlusAPI.Language.GetItem(LangItem, "m9"),
                                             DateTime.Now.ToLocalTime(),
                                             documentTo.Title));
                                     }
+                                }
+
+                                if (_stopCopyingOperation)
+                                {
+                                    OnPassedElementsCountChanged(true);
+                                    return;
                                 }
 
                                 ElementTransformUtils.CopyElements(
@@ -471,7 +562,7 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                             catch (Exception e)
                             {
                                 Logger.Instance.Add(string.Format(
-                                    CopyElementError,
+                                    ModPlusAPI.Language.GetItem(LangItem, "m7"),
                                     DateTime.Now.ToLocalTime(),
                                     element.Name,
                                     element.CategoryName,
@@ -481,20 +572,21 @@ namespace mprCopyElementsToOpenDocuments.Helpers
                             transaction.Commit();
                         }
                     }
+                    catch (Exception e)
+                    {
+                        Logger.Instance.Add(string.Format(
+                            ModPlusAPI.Language.GetItem(LangItem, "m7"),
+                            DateTime.Now.ToLocalTime(),
+                            element.Name,
+                            element.CategoryName,
+                            e.Message));
+                    }
                 }
-                catch (Exception e)
-                {
-                    Logger.Instance.Add(string.Format(
-                        CopyElementError,
-                        DateTime.Now.ToLocalTime(),
-                        element.Name,
-                        element.CategoryName,
-                        e.Message));
-                }
+
             }
 
             Logger.Instance.Add(string.Format(
-                CopyFinish,
+                ModPlusAPI.Language.GetItem(LangItem, "m6"),
                 DateTime.Now.ToLocalTime(),
                 documentFrom.Title,
                 string.Join(", ", revitDocuments.Select(doc => doc.Title))));
@@ -511,14 +603,40 @@ namespace mprCopyElementsToOpenDocuments.Helpers
             switch (copyingOptions)
             {
                 case Helpers.CopyingOptions.AllowDuplicates:
-                    return "Разрешить дублирование";
+                    return ModPlusAPI.Language.GetItem(LangItem, "co1");
                 case Helpers.CopyingOptions.DisallowDuplicates:
-                    return "Запретить дублирование";
+                    return ModPlusAPI.Language.GetItem(LangItem, "co2");
                 case Helpers.CopyingOptions.AskUser:
-                    return "Запросить разрешение";
+                    return ModPlusAPI.Language.GetItem(LangItem, "co3");
                 default:
                     return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// Метод вызова изменения количества элементов, прошедших проверку
+        /// </summary>
+        /// <param name="e">Указывает, закончилась ли операция копирования</param>
+        protected virtual void OnPassedElementsCountChanged(bool e)
+        {
+            PassedElementsCountChanged?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Обработчик предупреждений
+        /// </summary>
+        private static void Application_FailuresProcessing(
+            object sender,
+            Autodesk.Revit.DB.Events.FailuresProcessingEventArgs e)
+        {
+            // Получаем все предупреждения
+            var failList = e.GetFailuresAccessor().GetFailureMessages();
+            if (!failList.Any())
+                return;
+
+            // Пропускаем все ошибки
+            e.GetFailuresAccessor().DeleteAllWarnings();
+            e.SetProcessingResult(FailureProcessingResult.Continue);
         }
     }
 }

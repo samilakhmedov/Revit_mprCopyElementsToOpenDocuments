@@ -1,10 +1,9 @@
-﻿using System.Linq;
-
-namespace mprCopyElementsToOpenDocuments.Models
+﻿namespace mprCopyElementsToOpenDocuments.Models
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Linq;
     using Interfaces;
     using ModPlusAPI.Mvvm;
 

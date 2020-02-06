@@ -20,15 +20,13 @@
         {
             try
             {
-                ////Statistic.SendCommandStarting(ModPlusConnector.Instance);
-
                 if (_mainView == null)
                 {
                     _mainView = new MainView();
                     var viewModel = new MainViewModel(commandData.Application);
                     _mainView.DataContext = viewModel;
                     _mainView.Closed += (sender, args) => _mainView = null;
-                    _mainView.Show();
+                    _mainView.ShowDialog();
 
                     return Result.Succeeded;
                 }
