@@ -47,15 +47,27 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command.cs" />
-    <Compile Include="Models\BrowserItemGroup.cs" />
+    <Compile Include="Helpers\BrowserItemEqualityComparer.cs" />
+    <Compile Include="Helpers\CopyingOptions.cs" />
+    <Compile Include="Helpers\CustomCopyHandlerAbort.cs" />
+    <Compile Include="Helpers\CustomCopyHandlerAllow.cs" />
+    <Compile Include="Helpers\Logger.cs" />
+    <Compile Include="Helpers\RevitOperationService.cs" />
+    <Compile Include="Models\GeneralItemsGroup.cs" />
     <Compile Include="Models\BrowserItem.cs" />
     <Compile Include="Models\Interfaces\IBrowserItem.cs" />
+    <Compile Include="Models\Interfaces\IExpandableGroup.cs" />
+    <Compile Include="Models\Interfaces\IRevitElement.cs" />
     <Compile Include="Models\RevitDocument.cs" />
     <Compile Include="ModPlusConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModels\LoggerViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\LoggerView.xaml.cs">
+      <DependentUpon>LoggerView.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -77,15 +89,22 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Page Include="Views\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\LoggerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\check_all.png" />
+    <Resource Include="Resources\collapse_all.png" />
+    <Resource Include="Resources\expand_all.png" />
+    <Resource Include="Resources\uncheck_all.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

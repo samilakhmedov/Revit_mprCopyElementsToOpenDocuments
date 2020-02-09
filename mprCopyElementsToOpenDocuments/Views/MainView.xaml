@@ -2,50 +2,233 @@
                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                   xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
                    xmlns:model="clr-namespace:mprCopyElementsToOpenDocuments.Models"
                    xmlns:viewModels="clr-namespace:mprCopyElementsToOpenDocuments.ViewModels"
-                   xmlns:converters="clr-namespace:ModPlusAPI.Converters;assembly=ModPlusAPI"
                    xmlns:mps="https://modplus.org/winfx/xaml/controls"
                    mc:Ignorable="d"
                    d:DataContext="{d:DesignInstance viewModels:MainViewModel, d:IsDesignTimeCreatable=False}"
-                   d:DesignHeight="800" d:DesignWidth="550"
-                   MinHeight="800" MinWidth="550">
-    <!--<Window.Resources>
+                   d:DesignHeight="750" d:DesignWidth="510"
+                   MinHeight="750" MinWidth="510"
+                   WindowStartupLocation="CenterScreen">
+    <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/ModPlusStyle;component/Styles/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <XmlDataProvider x:Key="Lang" Source="C:/Projects/ru-RU.xml" XPath="ModPlus/mprCopySheetsToOpenDocuments" />
-            <converters:BooleanInverseConverter x:Key="BooleanInverseConverter"/>
+            <XmlDataProvider x:Key="Lang" Source="C:/Projects/Core_LanguageFiles/LanguageFiles/en-US.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
 
-            <HierarchicalDataTemplate DataType="{x:Type model:BrowserItemGroup}"
-                                      ItemsSource="{Binding Path=SubItems}">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></CheckBox>
-                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" VerticalAlignment="Center"></TextBlock>
-                </StackPanel>
-                <HierarchicalDataTemplate.ItemContainerStyle>
-                    <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
-                        <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></Setter>
-                        <EventSetter Event="Selected" Handler="TreeViewSelectedItem_OnHandler"></EventSetter>
-                    </Style>
-                </HierarchicalDataTemplate.ItemContainerStyle>
-            </HierarchicalDataTemplate>
-
-            <DataTemplate DataType="{x:Type model:BrowserItem}">
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></CheckBox>
-                    <TextBlock VerticalAlignment="Center">
-                        <Run Text="{Binding Path=SheetNumber, Mode=OneWay}"></Run>
-                        <Run Text="-"></Run>
-                        <Run Text="{Binding Path=SheetName, Mode=OneWay}"></Run>
-                    </TextBlock>
-                </StackPanel>
-            </DataTemplate>
+            <Style x:Key="ImgButton" TargetType="{x:Type Button}">
+                <Setter Property="Width" Value="25"/>
+                <Setter Property="Height" Value="25"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+            <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
+                <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <EventSetter Event="Selected" Handler="TreeViewSelectedItem_OnHandler"/>
+            </Style>
         </ResourceDictionary>
-    </Window.Resources>-->
-    <Grid>
+    </Window.Resources>
 
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 15 0"
+                    HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Name="ExpandAll" Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/expand_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding ExpandAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
+            <Button Name="CollapseAll" Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/collapse_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding CollapseAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
+            <Button Name="CheckAll" Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/check_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding CheckAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
+            <Button Name="UncheckAll" Style="{StaticResource ImgButton}">
+                <Image Source="../Resources/uncheck_all.png"/>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="Click">
+                        <b:InvokeCommandAction Command="{Binding UncheckAllCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Button>
+        </StackPanel>
+        <Grid Grid.Row="1" Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.6*"/>
+                <RowDefinition Height="0.4*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TreeView Grid.Row="0" Name="ElementsTreeView"
+                      ItemsSource="{Binding Path=GeneralGroups}"
+                      Margin="0 0 0 10" BorderThickness="0"
+                      IsEnabled="True">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type model:GeneralItemsGroup}" ItemsSource="{Binding Path=Items}">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="{Binding Path=Name, Mode=OneWay}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.ItemContainerStyle>
+                    <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
+            <Grid Grid.Row="1" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.4*"/>
+                    <ColumnDefinition Width="0.6*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.1*"/>
+                        <RowDefinition Height="0.1*"/>
+                        <RowDefinition Height="0.5*"/>
+                        <RowDefinition Height="0.15*"/>
+                        <RowDefinition Height="0.15*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h1}"
+                               HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Margin="5 0 0 0" FontSize="22" FontWeight="Bold" Text="{Binding Path=SelectedItems.Count, Mode=OneWay}"
+                               HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <GroupBox Grid.Row="2" Header="{Binding Source={StaticResource Lang}, XPath=h4}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <RadioButton Grid.Row="0" Margin="0"
+                                         Name="AllowDuplicate" Content="{Binding Source={StaticResource Lang}, XPath=co1}"
+                                         IsChecked="True">
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Checked">
+                                        <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
+                                                               CommandParameter="{Binding ElementName=AllowDuplicate, Path=Name}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </RadioButton>
+                            <RadioButton Grid.Row="1" Margin="0"
+                                         Name="RefuseDuplicate" Content="{Binding Source={StaticResource Lang}, XPath=co2}">
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Checked">
+                                        <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
+                                                               CommandParameter="{Binding ElementName=RefuseDuplicate, Path=Name}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </RadioButton>
+                            <RadioButton Name="AskUser" Grid.Row="2" Margin="0"
+                                         Content="{Binding Source={StaticResource Lang}, XPath=co3}">
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Checked">
+                                        <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
+                                                               CommandParameter="{Binding ElementName=AskUser, Path=Name}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </RadioButton>
+                        </Grid>
+                    </GroupBox>
+                    <Button Name="LogButton" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Command="{Binding Path=OpenLogCommand}"
+                            Content="{Binding Source={StaticResource Lang}, XPath=h5}"/>
+                    <Button Name="TransferButton" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            Command="{Binding Path=StartCopyingCommand}"
+                            Content="{Binding Source={StaticResource Lang}, XPath=h6}"/>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.1*"/>
+                        <RowDefinition Height="0.1*"/>
+                        <RowDefinition Height="0.1*"/>
+                        <RowDefinition Height="0.7*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h2}"
+                               HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <ComboBox Name="FromDoc" Grid.Row="1" Margin="5 0 5 0"
+                              ItemsSource="{Binding Path=Documents, Mode=OneWay}"
+                              SelectedItem="{Binding Path=FromDocument, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Run Text="{Binding Path=Title, Mode=OneWay}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <b:Interaction.Triggers>
+                            <b:EventTrigger EventName="SelectionChanged">
+                                <b:InvokeCommandAction Command="{Binding ProcessSelectedDocumentCommand}"/>
+                            </b:EventTrigger>
+                        </b:Interaction.Triggers>
+                    </ComboBox>
+                    <TextBlock Grid.Row="2" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h3}"
+                               HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <ListBox Name="ToDoc" Grid.Row="3"
+                             ItemsSource="{Binding Path=ToDocuments, Mode=OneWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding Path=Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run Text="{Binding Path=Title, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Row="2" Visibility="{Binding Path=IsVisible}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.7*"/>
+                    <ColumnDefinition Width="0.15*"/>
+                    <ColumnDefinition Width="0.15*"/>
+                </Grid.ColumnDefinitions>
+                <ProgressBar Grid.Column="0" HorizontalAlignment="Stretch" 
+                             Value ="{Binding Path=PassedElements}"
+                             Maximum="{Binding Path=TotalElements}"/>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="{Binding Path=PassedElements}"/>
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="/"/>
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="{Binding Path=TotalElements}"/>
+                </StackPanel>
+                <Button Grid.Column="2"
+                        Content="{Binding Source={StaticResource Lang}, XPath=m32}"
+                        Command="{Binding Path=StopCopyingCommand}"/>
+            </Grid>
+        </Grid>
     </Grid>
 </mps:ModPlusWindow>
