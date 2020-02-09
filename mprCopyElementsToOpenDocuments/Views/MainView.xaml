@@ -41,7 +41,7 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 15 0"
                     HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button Style="{StaticResource ImgButton}">
+            <Button Name="ExpandAll" Style="{StaticResource ImgButton}">
                 <Image Source="../Resources/expand_all.png"/>
                 <b:Interaction.Triggers>
                     <b:EventTrigger EventName="Click">
@@ -49,7 +49,7 @@
                     </b:EventTrigger>
                 </b:Interaction.Triggers>
             </Button>
-            <Button Style="{StaticResource ImgButton}">
+            <Button Name="CollapseAll" Style="{StaticResource ImgButton}">
                 <Image Source="../Resources/collapse_all.png"/>
                 <b:Interaction.Triggers>
                     <b:EventTrigger EventName="Click">
@@ -57,7 +57,7 @@
                     </b:EventTrigger>
                 </b:Interaction.Triggers>
             </Button>
-            <Button Style="{StaticResource ImgButton}">
+            <Button Name="CheckAll" Style="{StaticResource ImgButton}">
                 <Image Source="../Resources/check_all.png"/>
                 <b:Interaction.Triggers>
                     <b:EventTrigger EventName="Click">
@@ -65,7 +65,7 @@
                     </b:EventTrigger>
                 </b:Interaction.Triggers>
             </Button>
-            <Button Style="{StaticResource ImgButton}">
+            <Button Name="UncheckAll" Style="{StaticResource ImgButton}">
                 <Image Source="../Resources/uncheck_all.png"/>
                 <b:Interaction.Triggers>
                     <b:EventTrigger EventName="Click">
@@ -77,10 +77,10 @@
         <Grid Grid.Row="1" Margin="15">
             <Grid.RowDefinitions>
                 <RowDefinition Height="0.6*"/>
-                <RowDefinition Height="0.38*"/>
-                <RowDefinition Height="0.02*"/>
+                <RowDefinition Height="0.4*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TreeView Grid.Row="0"
+            <TreeView Grid.Row="0" Name="ElementsTreeView"
                       ItemsSource="{Binding Path=GeneralGroups}"
                       Margin="0 0 0 10" BorderThickness="0"
                       IsEnabled="True">
@@ -133,16 +133,16 @@
                                 </b:Interaction.Triggers>
                             </RadioButton>
                             <RadioButton Grid.Row="1" Margin="0"
-                                         Name="DisallowDuplicate" Content="{Binding Source={StaticResource Lang}, XPath=co2}">
+                                         Name="RefuseDuplicate" Content="{Binding Source={StaticResource Lang}, XPath=co2}">
                                 <b:Interaction.Triggers>
                                     <b:EventTrigger EventName="Checked">
                                         <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
-                                                               CommandParameter="{Binding ElementName=DisallowDuplicate, Path=Name}"/>
+                                                               CommandParameter="{Binding ElementName=RefuseDuplicate, Path=Name}"/>
                                     </b:EventTrigger>
                                 </b:Interaction.Triggers>
                             </RadioButton>
-                            <RadioButton Grid.Row="2" Margin="0"
-                                         Name="AskUser" Content="{Binding Source={StaticResource Lang}, XPath=co3}">
+                            <RadioButton Name="AskUser" Grid.Row="2" Margin="0"
+                                         Content="{Binding Source={StaticResource Lang}, XPath=co3}">
                                 <b:Interaction.Triggers>
                                     <b:EventTrigger EventName="Checked">
                                         <b:InvokeCommandAction Command="{Binding ChangeCopyingOptionsCommand}"
@@ -152,10 +152,10 @@
                             </RadioButton>
                         </Grid>
                     </GroupBox>
-                    <Button Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    <Button Name="LogButton" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Command="{Binding Path=OpenLogCommand}"
                             Content="{Binding Source={StaticResource Lang}, XPath=h5}"/>
-                    <Button Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    <Button Name="TransferButton" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                             Command="{Binding Path=StartCopyingCommand}"
                             Content="{Binding Source={StaticResource Lang}, XPath=h6}"/>
                 </Grid>
@@ -168,7 +168,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h2}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <ComboBox Grid.Row="1" Margin="5 0 5 0"
+                    <ComboBox Name="FromDoc" Grid.Row="1" Margin="5 0 5 0"
                               ItemsSource="{Binding Path=Documents, Mode=OneWay}"
                               SelectedItem="{Binding Path=FromDocument, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
@@ -186,7 +186,7 @@
                     </ComboBox>
                     <TextBlock Grid.Row="2" Margin="5 0 0 0" FontSize="14" Text="{Binding Source={StaticResource Lang}, XPath=h3}"
                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <ListBox Grid.Row="3"
+                    <ListBox Name="ToDoc" Grid.Row="3"
                              ItemsSource="{Binding Path=ToDocuments, Mode=OneWay}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -201,8 +201,34 @@
                     </ListBox>
                 </Grid>
             </Grid>
-            <ProgressBar Grid.Row="2" Maximum="{Binding Path=TotalElements}"
-                         Value ="{Binding Path=PassedElements}"/>
+
+            <Grid Grid.Row="2" Visibility="{Binding Path=IsVisible}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.7*"/>
+                    <ColumnDefinition Width="0.15*"/>
+                    <ColumnDefinition Width="0.15*"/>
+                </Grid.ColumnDefinitions>
+                <ProgressBar Grid.Column="0" HorizontalAlignment="Stretch" 
+                             Value ="{Binding Path=PassedElements}"
+                             Maximum="{Binding Path=TotalElements}"/>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="{Binding Path=PassedElements}"/>
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="/"/>
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="{Binding Path=TotalElements}"/>
+                </StackPanel>
+                <Button Grid.Column="2"
+                        Content="{Binding Source={StaticResource Lang}, XPath=m32}"
+                        Command="{Binding Path=StopCopyingCommand}"/>
+            </Grid>
         </Grid>
     </Grid>
 </mps:ModPlusWindow>

@@ -13,7 +13,7 @@
         /// <summary>
         /// Запретить дублирование
         /// </summary>
-        DisallowDuplicates,
+        RefuseDuplicate,
 
         /// <summary>
         /// Запросить разрешение

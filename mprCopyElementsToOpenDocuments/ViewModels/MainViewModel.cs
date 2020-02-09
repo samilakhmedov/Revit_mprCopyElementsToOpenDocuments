@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Windows;
     using System.Windows.Input;
     using Autodesk.Revit.UI;
     using Helpers;
@@ -16,10 +17,13 @@
     /// </summary>
     public class MainViewModel : VmBase
     {
+        private const string LangItem = "mprCopyElementsToOpenDocuments";
         private readonly RevitOperationService _revitOperationService;
         private int _passedElements;
+        private int _brokenElements;
         private int _totalElements = 1;
-        private bool _isWorking;
+        private Visibility _isShowing = Visibility.Collapsed;
+        private readonly MainView _mainView;
         private RevitDocument _fromDocument;
         private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
         private List<BrowserItem> _selectedItems = new List<BrowserItem>();
@@ -31,11 +35,14 @@
         /// Создает экземпляр класса <see cref="MainViewModel"/>
         /// </summary>
         /// <param name="uiApplication">Активная сессия пользовательского интерфейса Revit</param>
-        public MainViewModel(UIApplication uiApplication)
+        /// <param name="mainView">Главное окно плагина</param>
+        public MainViewModel(UIApplication uiApplication, MainView mainView)
         {
+            _mainView = mainView;
             _revitOperationService = new RevitOperationService(uiApplication);
             _revitOperationService.PassedElementsCountChanged +=
-                RevitOperationServiceOnPassedElementsCountChanged;
+                OnPassedElementsCountChanged;
+            _revitOperationService.BrokenElementsCountChanged += OnBrokenElementsCountChanged;
 
             var docs = _revitOperationService.GetAllDocuments();
             foreach (var doc in docs)
@@ -112,6 +119,19 @@
             new RelayCommandWithoutParameter(StopCopying);
 
         /// <summary>
+        /// Указывает, выполняет ли приложение копирование
+        /// </summary>
+        public Visibility IsVisible
+        {
+            get => _isShowing;
+            set
+            {
+                _isShowing = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
         /// Количество скопированных элементов
         /// </summary>
         public int PassedElements
@@ -120,6 +140,19 @@
             set
             {
                 _passedElements = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Количество ошибок
+        /// </summary>
+        public int BrokenElements
+        {
+            get => _brokenElements;
+            set
+            {
+                _brokenElements = value;
                 OnPropertyChanged();
             }
         }
@@ -286,8 +319,8 @@
                 case "AllowDuplicate":
                     CopyingOptions = CopyingOptions.AllowDuplicates;
                     break;
-                case "DisallowDuplicate":
-                    CopyingOptions = CopyingOptions.DisallowDuplicates;
+                case "RefuseDuplicate":
+                    CopyingOptions = CopyingOptions.RefuseDuplicate;
                     break;
                 case "AskUser":
                     CopyingOptions = CopyingOptions.AskUser;
@@ -334,7 +367,8 @@
         /// </summary>
         private void StartCopying()
         {
-            _isWorking = true;
+            IsVisible = Visibility.Visible;
+            _mainView.IsChangeableFieldsEnabled = false;
             TotalElements = SelectedItems.Any()
                 ? SelectedItems.Count * ToDocuments.Count(doc => doc.Selected)
                 : 1;
@@ -354,8 +388,7 @@
         {
             return SelectedItems.Count > 0
                    && FromDocument != null
-                   && ToDocuments.Any(doc => doc.Selected) 
-                   && !_isWorking;
+                   && ToDocuments.Any(doc => doc.Selected);
         }
 
         /// <summary>
@@ -411,18 +444,33 @@
         /// Метод обработки события изменения
         /// количества элементов, прошедших проверку
         /// </summary>
-        private void RevitOperationServiceOnPassedElementsCountChanged(object sender, bool e)
+        private void OnPassedElementsCountChanged(object sender, bool e)
         {
             if (e)
             {
-                _isWorking = false;
+                PassedElements++;
+                IsVisible = Visibility.Collapsed;
+                _mainView.IsChangeableFieldsEnabled = true;
+                var resultMessage = string.Format(
+                    ModPlusAPI.Language.GetItem(LangItem, "m31"),
+                    PassedElements - BrokenElements,
+                    Environment.NewLine,
+                    BrokenElements,
+                    Environment.NewLine);
+                TaskDialog.Show(ModPlusAPI.Language.GetItem(LangItem, "m30"), resultMessage);
                 PassedElements = 0;
+                BrokenElements = 0;
                 TotalElements = 1;
             }
             else
             {
                 PassedElements++;
             }
+        }
+
+        private void OnBrokenElementsCountChanged(object sender, EventArgs e)
+        {
+            BrokenElements++;
         }
     }
 }

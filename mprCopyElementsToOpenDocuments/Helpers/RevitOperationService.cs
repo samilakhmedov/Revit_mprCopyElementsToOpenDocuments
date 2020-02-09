@@ -56,13 +56,17 @@
         public RevitOperationService(UIApplication uiApplication)
         {
             _uiApplication = uiApplication;
-            uiApplication.Application.FailuresProcessing += Application_FailuresProcessing;
         }
 
         /// <summary>
         /// Событие изменения количества элементов, прошедших проверку
         /// </summary>
         public event EventHandler<bool> PassedElementsCountChanged;
+
+        /// <summary>
+        /// Событие изменения количества элементов с ошибками
+        /// </summary>
+        public event EventHandler BrokenElementsCountChanged;
 
         /// <summary>
         /// Метод остановки операции копирования
@@ -479,6 +483,8 @@
             List<BrowserItem> elements,
             CopyingOptions copyingOptions)
         {
+            _uiApplication.Application.FailuresProcessing += Application_FailuresProcessing;
+
             var revitDocuments = documentsTo.ToList();
 
             Logger.Instance.Add(string.Format(
@@ -493,10 +499,10 @@
             var copyPasteOption = new CopyPasteOptions();
             switch (copyingOptions)
             {
-                case Helpers.CopyingOptions.AllowDuplicates:
+                case CopyingOptions.AllowDuplicates:
                     copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAllow());
                     break;
-                case Helpers.CopyingOptions.DisallowDuplicates:
+                case CopyingOptions.RefuseDuplicate:
                     copyPasteOption.SetDuplicateTypeNamesHandler(new CustomCopyHandlerAbort());
                     break;
             }
@@ -505,19 +511,10 @@
             {
                 foreach (var element in elements)
                 {
+                    var succeed = true;
                     try
                     {
                         await Task.Delay(100).ConfigureAwait(true);
-                        _passedElements++;
-                        if (_passedElements == elements.Count * revitDocuments.Count)
-                        {
-                            OnPassedElementsCountChanged(true);
-                            _passedElements = 0;
-                        }
-                        else
-                        {
-                            OnPassedElementsCountChanged(false);
-                        }
 
                         var elementId = new ElementId(element.Id);
                         var revitElement = documentFrom.Document.GetElement(elementId);
@@ -548,6 +545,7 @@
 
                                 if (_stopCopyingOperation)
                                 {
+                                    _stopCopyingOperation = false;
                                     OnPassedElementsCountChanged(true);
                                     return;
                                 }
@@ -565,8 +563,11 @@
                                     ModPlusAPI.Language.GetItem(LangItem, "m7"),
                                     DateTime.Now.ToLocalTime(),
                                     element.Name,
+                                    element.Id,
                                     element.CategoryName,
                                     e.Message));
+
+                                succeed = false;
                             }
 
                             transaction.Commit();
@@ -578,11 +579,28 @@
                             ModPlusAPI.Language.GetItem(LangItem, "m7"),
                             DateTime.Now.ToLocalTime(),
                             element.Name,
+                            element.Id,
                             element.CategoryName,
                             e.Message));
+
+                        succeed = false;
+                    }
+
+                    if (!succeed)
+                        OnBrokenElementsCountChanged();
+
+                    _passedElements++;
+                    if (_passedElements == elements.Count * revitDocuments.Count)
+                    {
+                        OnPassedElementsCountChanged(true);
+                        _passedElements = 0;
+                        _uiApplication.Application.FailuresProcessing -= Application_FailuresProcessing;
+                    }
+                    else
+                    {
+                        OnPassedElementsCountChanged(false);
                     }
                 }
-
             }
 
             Logger.Instance.Add(string.Format(
@@ -602,11 +620,11 @@
         {
             switch (copyingOptions)
             {
-                case Helpers.CopyingOptions.AllowDuplicates:
+                case CopyingOptions.AllowDuplicates:
                     return ModPlusAPI.Language.GetItem(LangItem, "co1");
-                case Helpers.CopyingOptions.DisallowDuplicates:
+                case CopyingOptions.RefuseDuplicate:
                     return ModPlusAPI.Language.GetItem(LangItem, "co2");
-                case Helpers.CopyingOptions.AskUser:
+                case CopyingOptions.AskUser:
                     return ModPlusAPI.Language.GetItem(LangItem, "co3");
                 default:
                     return string.Empty;
@@ -623,20 +641,35 @@
         }
 
         /// <summary>
+        /// Метод вызова изменения количества элементов с ошибками
+        /// </summary>
+        protected virtual void OnBrokenElementsCountChanged()
+        {
+            BrokenElementsCountChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// Обработчик предупреждений
         /// </summary>
         private static void Application_FailuresProcessing(
             object sender,
             Autodesk.Revit.DB.Events.FailuresProcessingEventArgs e)
         {
-            // Получаем все предупреждения
-            var failList = e.GetFailuresAccessor().GetFailureMessages();
+            var failureAccessor = e.GetFailuresAccessor();
+
+            var failList = failureAccessor.GetFailureMessages();
             if (!failList.Any())
                 return;
 
-            // Пропускаем все ошибки
-            e.GetFailuresAccessor().DeleteAllWarnings();
-            e.SetProcessingResult(FailureProcessingResult.Continue);
+            if (failureAccessor.GetSeverity() == FailureSeverity.Warning)
+            {
+                failureAccessor.DeleteAllWarnings();
+                e.SetProcessingResult(FailureProcessingResult.Continue);
+            }
+
+            e.SetProcessingResult(failureAccessor.GetSeverity() == FailureSeverity.Error
+                ? FailureProcessingResult.ProceedWithCommit
+                : FailureProcessingResult.ProceedWithRollBack);
         }
     }
 }
