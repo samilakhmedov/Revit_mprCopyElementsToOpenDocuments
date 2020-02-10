@@ -7,6 +7,7 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Models;
+    using ModPlusAPI.Windows;
 
     /// <summary>
     /// Сервис работы с Revit
@@ -23,7 +24,7 @@
             typeof(ProjectLocation),
             typeof(SiteLocation),
             typeof(ParameterElement),
-            typeof(SharedParameterElement), 
+            typeof(SharedParameterElement),
             typeof(SunAndShadowSettings),
             typeof(SpatialElement),
             typeof(BrowserOrganization),
@@ -117,318 +118,18 @@
             try
             {
                 var allElements = new List<BrowserItem>();
-
-                var elementTypes = new FilteredElementCollector(revitDocument.Document)
-                    .WhereElementIsElementType()
-                    .Where(e => e.Category != null && e.GetType() != typeof(ViewSheet))
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category.Name + ModPlusAPI.Language.GetItem(LangItem, "m11"),
-                                ((ElementType)e).FamilyName,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var elements = new FilteredElementCollector(revitDocument.Document)
-                    .WherePasses(new ElementMulticlassFilter(_elementTypes))
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var specialCategoryElements = new FilteredElementCollector(revitDocument.Document)
-                    .WherePasses(new LogicalOrFilter(new List<ElementFilter>
-                    {
-                        new ElementCategoryFilter(BuiltInCategory.OST_ColorFillSchema),
-                        new ElementCategoryFilter(BuiltInCategory.OST_AreaSchemes),
-                        new ElementCategoryFilter(BuiltInCategory.OST_Phases),
-                        new ElementCategoryFilter(BuiltInCategory.OST_VolumeOfInterest)
-                    }))
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category.Name,
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var viewTemplates = new FilteredElementCollector(revitDocument.Document)
-                    .OfClass(typeof(View))
-                    .Where(e => ((View)e).IsTemplate)
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                ModPlusAPI.Language.GetItem(LangItem, "m29"),
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var views = new FilteredElementCollector(revitDocument.Document)
-                    .OfClass(typeof(View))
-                    .WhereElementIsNotElementType()
-                    .Where(e => !((View)e).IsTemplate)
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var elevationMarkers = new FilteredElementCollector(revitDocument.Document)
-                    .OfClass(typeof(ElevationMarker))
-                    .WhereElementIsNotElementType()
-                    .Where(e => ((ElevationMarker)e).CurrentViewCount > 0)
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category.Name,
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var viewports = new FilteredElementCollector(revitDocument.Document)
-                    .OfClass(typeof(ElementType))
-                    .Where(e => ((ElementType)e).FamilyName == "Viewport")
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category.Name,
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                IEnumerable<BrowserItem> worksets = new List<BrowserItem>();
-                if (revitDocument.Document.IsWorkshared)
-                {
-                    worksets = new FilteredWorksetCollector(revitDocument.Document)
-                        .OfKind(WorksetKind.UserWorkset)
-                        .Select(e =>
-                        {
-                            try
-                            {
-                                return new BrowserItem(
-                                    e.Id.IntegerValue,
-                                    ModPlusAPI.Language.GetItem(LangItem, "m10"),
-                                    "-",
-                                    e.Name);
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Instance.Add(
-                                    string.Format(
-                                        ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                        DateTime.Now.ToLocalTime(),
-                                        e.Id.IntegerValue,
-                                        ex.Message));
-                                return null;
-                            }
-                        });
-                }
-
-                var gridAndLevelFilter = new ElementMulticlassFilter(
-                    new List<Type> { typeof(Grid), typeof(Level) });
-                var gridsAndLevels = new FilteredElementCollector(revitDocument.Document)
-                    .WherePasses(gridAndLevelFilter)
-                    .WhereElementIsNotElementType()
-                    .Select(e =>
-                    {
-                        try
-                        {
-                            var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
-                            return new BrowserItem(
-                                e.Id.IntegerValue,
-                                e.Category.Name,
-                                elementType != null ? elementType.FamilyName : string.Empty,
-                                e.Name);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(
-                                string.Format(
-                                    ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                    DateTime.Now.ToLocalTime(),
-                                    e.Id.IntegerValue,
-                                    ex.Message));
-                            return null;
-                        }
-                    });
-
-                var parameters = new List<BrowserItem>();
-                if (!revitDocument.Document.IsFamilyDocument)
-                {
-                    var definitionBindingMapIterator = revitDocument.Document.ParameterBindings.ForwardIterator();
-                    definitionBindingMapIterator.Reset();
-                    while (definitionBindingMapIterator.MoveNext())
-                    {
-                        Element element = null;
-                        try
-                        {
-                            var key = (InternalDefinition)definitionBindingMapIterator.Key;
-                            element = revitDocument.Document.GetElement(key.Id);
-                            var elementType = (ElementType)revitDocument.Document.GetElement(element.GetTypeId());
-                            parameters.Add(new BrowserItem(
-                                    element.Id.IntegerValue,
-                                    element.Category?.Name ?? _specialTypeCategoryNames[element.GetType().Name],
-                                    elementType != null ? elementType.FamilyName : string.Empty,
-                                    element.Name));
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.Add(string.Format(
-                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
-                                DateTime.Now.ToLocalTime(),
-                                element != null ? element.Id.IntegerValue.ToString() : "null",
-                                ex.Message));
-                            return null;
-                        }
-                    }
-                }
-
-                var categories = new List<BrowserItem>();
-                var categoriesList = revitDocument.Document.Settings.Categories;
-                foreach (Category category in categoriesList)
-                {
-                    if (category.Id.IntegerValue > 0)
-                        continue;
-
-                    var subCategories = category.SubCategories;
-                    if (subCategories == null || subCategories.Size == 0)
-                        continue;
-
-                    foreach (Category subCategory in subCategories)
-                    {
-                        var element = revitDocument.Document.GetElement(subCategory.Id);
-                        if (element != null)
-                        {
-                            categories.Add(new BrowserItem(
-                                element.Id.IntegerValue,
-                                ModPlusAPI.Language.GetItem(LangItem, "m26"),
-                                string.Empty,
-                                element.Name));
-                        }
-                    }
-                }
-
-                allElements.AddRange(elementTypes);
-                allElements.AddRange(elements);
-                allElements.AddRange(specialCategoryElements);
-                allElements.AddRange(viewTemplates);
-                allElements.AddRange(views);
-                allElements.AddRange(elevationMarkers);
-                allElements.AddRange(viewports);
-                allElements.AddRange(worksets);
-                allElements.AddRange(gridsAndLevels);
-                allElements.AddRange(parameters);
-                allElements.AddRange(categories);
-
+                allElements.AddRange(GetElementTypes(revitDocument));
+                allElements.AddRange(GetElements(revitDocument));
+                allElements.AddRange(GetSpecialCategoryElements(revitDocument));
+                allElements.AddRange(GetViewTemplates(revitDocument));
+                allElements.AddRange(GetViews(revitDocument));
+                allElements.AddRange(GetElevationMarkers(revitDocument));
+                allElements.AddRange(GetViewports(revitDocument));
+                allElements.AddRange(revitDocument.Document.IsWorkshared ? GetWorksets(revitDocument) : new List<BrowserItem>());
+                allElements.AddRange(GetGridsAndLevels(revitDocument));
+                allElements.AddRange(GetParameters(revitDocument));
+                allElements.AddRange(GetCategories(revitDocument));
+                
                 var elementsGroupedByCategory = allElements
                     .GroupBy(e => e.CategoryName)
                     .ToList();
@@ -470,13 +171,9 @@
                     ModPlusAPI.Language.GetItem(LangItem, "m28"),
                     categoryGroups);
             }
-            catch
+            catch (Exception exception)
             {
-                Logger.Instance.Add(
-                    string.Format(
-                        ModPlusAPI.Language.GetItem(LangItem, "m4"),
-                        DateTime.Now.ToLocalTime(),
-                        revitDocument.Title));
+                ExceptionBox.Show(exception);
 
                 return new GeneralItemsGroup(
                     ModPlusAPI.Language.GetItem(LangItem, "m28"),
@@ -685,5 +382,350 @@
                 ? FailureProcessingResult.ProceedWithCommit
                 : FailureProcessingResult.ProceedWithRollBack);
         }
+
+        #region Get from document
+
+        private static IEnumerable<BrowserItem> GetElementTypes(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .WhereElementIsElementType()
+                .Where(e => e.Category != null && e.GetType() != typeof(ViewSheet))
+                .Select(e =>
+                {
+                    try
+                    {
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category.Name + ModPlusAPI.Language.GetItem(LangItem, "m11"),
+                            ((ElementType)e).FamilyName,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private static IEnumerable<BrowserItem> GetCategories(RevitDocument revitDocument)
+        {
+            var categories = new List<BrowserItem>();
+            var categoriesList = revitDocument.Document.Settings.Categories;
+            foreach (Category category in categoriesList)
+            {
+                if (category.Id.IntegerValue > 0)
+                    continue;
+
+                var subCategories = category.SubCategories;
+                if (subCategories == null || subCategories.Size == 0)
+                    continue;
+
+                foreach (Category subCategory in subCategories)
+                {
+                    var element = revitDocument.Document.GetElement(subCategory.Id);
+                    if (element != null)
+                    {
+                        categories.Add(new BrowserItem(
+                            element.Id.IntegerValue,
+                            ModPlusAPI.Language.GetItem(LangItem, "m26"),
+                            string.Empty,
+                            element.Name));
+                    }
+                }
+            }
+
+            return categories;
+        }
+
+        private IEnumerable<BrowserItem> GetParameters(RevitDocument revitDocument)
+        {
+            var parameters = new List<BrowserItem>();
+            if (revitDocument.Document.IsFamilyDocument) 
+                return parameters;
+
+            var definitionBindingMapIterator = revitDocument.Document.ParameterBindings.ForwardIterator();
+            definitionBindingMapIterator.Reset();
+            while (definitionBindingMapIterator.MoveNext())
+            {
+                Element element = null;
+                try
+                {
+                    var key = (InternalDefinition) definitionBindingMapIterator.Key;
+                    element = revitDocument.Document.GetElement(key.Id);
+                    var elementType = (ElementType) revitDocument.Document.GetElement(element.GetTypeId());
+                    parameters.Add(new BrowserItem(
+                        element.Id.IntegerValue,
+                        element.Category?.Name ?? _specialTypeCategoryNames[element.GetType().Name],
+                        elementType != null ? elementType.FamilyName : string.Empty,
+                        element.Name));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.Add(string.Format(
+                        ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                        DateTime.Now.ToLocalTime(),
+                        element != null ? element.Id.IntegerValue.ToString() : "null",
+                        ex.Message));
+                }
+            }
+
+            return parameters;
+        }
+
+        private static IEnumerable<BrowserItem> GetGridsAndLevels(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .WherePasses(new ElementMulticlassFilter(new List<Type>
+                {
+                    typeof(Grid), typeof(Level)
+                }))
+                .WhereElementIsNotElementType()
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category.Name,
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private static IEnumerable<BrowserItem> GetWorksets(RevitDocument revitDocument)
+        {
+            return new FilteredWorksetCollector(revitDocument.Document)
+                .OfKind(WorksetKind.UserWorkset)
+                .Select(e =>
+                {
+                    try
+                    {
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            ModPlusAPI.Language.GetItem(LangItem, "m10"),
+                            "-",
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private static IEnumerable<BrowserItem> GetViewports(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .OfClass(typeof(ElementType))
+                .Where(e => ((ElementType) e).FamilyName == "Viewport")
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category.Name,
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private static IEnumerable<BrowserItem> GetElevationMarkers(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .OfClass(typeof(ElevationMarker))
+                .WhereElementIsNotElementType()
+                .Where(e => ((ElevationMarker) e).CurrentViewCount > 0)
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category.Name,
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private IEnumerable<BrowserItem> GetViews(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .OfClass(typeof(View))
+                .WhereElementIsNotElementType()
+                .Where(e => !((View) e).IsTemplate)
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private static IEnumerable<BrowserItem> GetViewTemplates(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .OfClass(typeof(View))
+                .Where(e => ((View) e).IsTemplate)
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            ModPlusAPI.Language.GetItem(LangItem, "m29"),
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private static IEnumerable<BrowserItem> GetSpecialCategoryElements(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .WherePasses(new LogicalOrFilter(new List<ElementFilter>
+                {
+                    new ElementCategoryFilter(BuiltInCategory.OST_ColorFillSchema),
+                    new ElementCategoryFilter(BuiltInCategory.OST_AreaSchemes),
+                    new ElementCategoryFilter(BuiltInCategory.OST_Phases),
+                    new ElementCategoryFilter(BuiltInCategory.OST_VolumeOfInterest)
+                }))
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category.Name,
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        private IEnumerable<BrowserItem> GetElements(RevitDocument revitDocument)
+        {
+            return new FilteredElementCollector(revitDocument.Document)
+                .WherePasses(new ElementMulticlassFilter(_elementTypes))
+                .Select(e =>
+                {
+                    try
+                    {
+                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        return new BrowserItem(
+                            e.Id.IntegerValue,
+                            e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
+                            elementType != null ? elementType.FamilyName : string.Empty,
+                            e.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Add(
+                            string.Format(
+                                ModPlusAPI.Language.GetItem(LangItem, "m1"),
+                                DateTime.Now.ToLocalTime(),
+                                e.Id.IntegerValue,
+                                ex.Message));
+                        return null;
+                    }
+                })
+                .Where(e => e != null);
+        }
+
+        #endregion
     }
 }
