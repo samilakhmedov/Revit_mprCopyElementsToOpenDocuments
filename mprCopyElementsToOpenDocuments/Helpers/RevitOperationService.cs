@@ -17,13 +17,27 @@
         private readonly UIApplication _uiApplication;
         private readonly List<Type> _elementTypes = new List<Type>
         {
-            typeof(ExportDWGSettings), typeof(Material), typeof(ProjectInfo),
-            typeof(ProjectLocation), typeof(SiteLocation), typeof(ParameterElement),
-            typeof(SharedParameterElement), typeof(SunAndShadowSettings), typeof(SpatialElement),
-            typeof(BrowserOrganization), typeof(DimensionType), typeof(FillPatternElement),
-            typeof(ParameterFilterElement), typeof(LinePatternElement), typeof(Family),
-            typeof(PhaseFilter), typeof(PrintSetting), typeof(Revision),
-            typeof(RevisionSettings), typeof(TextNoteType), typeof(ViewFamilyType)
+            typeof(ExportDWGSettings),
+            typeof(Material),
+            typeof(ProjectInfo),
+            typeof(ProjectLocation),
+            typeof(SiteLocation),
+            typeof(ParameterElement),
+            typeof(SharedParameterElement), 
+            typeof(SunAndShadowSettings),
+            typeof(SpatialElement),
+            typeof(BrowserOrganization),
+            typeof(DimensionType),
+            typeof(FillPatternElement),
+            typeof(ParameterFilterElement),
+            typeof(LinePatternElement),
+            typeof(Family),
+            typeof(PhaseFilter),
+            typeof(PrintSetting),
+            typeof(Revision),
+            typeof(RevisionSettings),
+            typeof(TextNoteType),
+            typeof(ViewFamilyType)
         };
 
         private readonly Dictionary<string, string> _specialTypeCategoryNames = new Dictionary<string, string>
@@ -43,7 +57,7 @@
             { nameof(ViewFamilyType), ModPlusAPI.Language.GetItem(LangItem, "m23") },
             { nameof(View), ModPlusAPI.Language.GetItem(LangItem, "m24") },
             { nameof(ParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m25") },
-            { nameof(SharedParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m26") }
+            { nameof(SharedParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m26") },
         };
 
         private bool _stopCopyingOperation;
