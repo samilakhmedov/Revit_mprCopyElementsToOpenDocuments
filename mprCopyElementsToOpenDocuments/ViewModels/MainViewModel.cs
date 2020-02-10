@@ -17,7 +17,7 @@
     /// </summary>
     public class MainViewModel : VmBase
     {
-        private const string LangItem = "mprCopyElementsToOpenDocuments";
+        private readonly string _langItem = ModPlusConnector.Instance.Name;
         private readonly RevitOperationService _revitOperationService;
         private int _passedElements;
         private int _brokenElements;
@@ -452,12 +452,12 @@
                 IsVisible = Visibility.Collapsed;
                 _mainView.IsChangeableFieldsEnabled = true;
                 var resultMessage = string.Format(
-                    ModPlusAPI.Language.GetItem(LangItem, "m31"),
+                    ModPlusAPI.Language.GetItem(_langItem, "m31"),
                     PassedElements - BrokenElements,
                     Environment.NewLine,
                     BrokenElements,
                     Environment.NewLine);
-                TaskDialog.Show(ModPlusAPI.Language.GetItem(LangItem, "m30"), resultMessage);
+                TaskDialog.Show(ModPlusAPI.Language.GetItem(_langItem, "m30"), resultMessage);
                 PassedElements = 0;
                 BrokenElements = 0;
                 TotalElements = 1;

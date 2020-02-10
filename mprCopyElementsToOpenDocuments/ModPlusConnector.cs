@@ -56,7 +56,7 @@
         public string Description => "Пакетное копирование элементов в открытые документы";
 
         /// <inheritdoc />
-        public string Author => string.Empty;
+        public string Author => "Ахмедов Самиль";
 
         /// <inheritdoc />
         public string Price => "0";
