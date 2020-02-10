@@ -1,10 +1,8 @@
 ﻿namespace mprCopyElementsToOpenDocuments.ViewModels
 {
     using System;
-    using System.IO;
     using System.Windows.Input;
     using Helpers;
-    using Microsoft.Win32;
     using ModPlusAPI.Mvvm;
 
     /// <summary>
@@ -12,13 +10,12 @@
     /// </summary>
     public class LoggerViewModel : VmBase
     {
-        private const string LangItem = "mprCopyElementsToOpenDocuments";
+        private readonly string _langItem = ModPlusConnector.Instance.Name;
 
         /// <summary>
-        /// Команда обработки выбранного документа Revit
+        /// Команда открытия лога в блокноте
         /// </summary>
-        public ICommand SaveResultsCommand =>
-            new RelayCommandWithoutParameter(SaveResults);
+        public ICommand OpenInNotepadCommand => new RelayCommandWithoutParameter(OpenInNotepad);
 
         /// <summary>
         /// Текущее состояние журнала событий
@@ -28,17 +25,9 @@
         /// <summary>
         /// Сохраняет данные журнала в файл
         /// </summary>
-        private void SaveResults()
+        private void OpenInNotepad()
         {
-            var saveFileDialog = new SaveFileDialog
-            {
-                Filter = "Text file (*.txt)|*.txt",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                FileName = ModPlusAPI.Language.GetItem(LangItem, "h5")
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-                File.WriteAllText(saveFileDialog.FileName, CurrentLogState);
+            ModPlusAPI.IO.String.ShowTextWithNotepad(CurrentLogState, ModPlusAPI.Language.GetItem(_langItem, "h5"));
         }
     }
 }

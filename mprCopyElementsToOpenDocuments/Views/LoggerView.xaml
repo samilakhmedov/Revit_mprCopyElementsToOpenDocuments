@@ -16,17 +16,17 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/ModPlusStyle;component/Styles/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <XmlDataProvider x:Key="Lang" Source="C:/Projects/Core_LanguageFiles/LanguageFiles/en-US.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
+            <XmlDataProvider x:Key="Lang" Source="E:/ModPlus/Languages/en-US.xml" XPath="ModPlus/mprCopyElementsToOpenDocuments" />
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="10">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.9*"/>
-            <RowDefinition Height="0.1*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="0" IsReadOnly="True" Margin="5" FontSize="14"
-                 HorizontalAlignment="Stretch"
+        <TextBox Grid.Row="0" IsReadOnly="True" Margin="{DynamicResource ModPlusDefaultMargin}"
+                 FontSize="14" HorizontalAlignment="Stretch"
                  VerticalAlignment="Stretch"
                  HorizontalScrollBarVisibility="Auto"
                  VerticalScrollBarVisibility="Auto"
@@ -34,6 +34,6 @@
         <Button Grid.Row="1" 
                 HorizontalAlignment="Right"
                 Content="{Binding Source={StaticResource Lang}, XPath=h7}"
-                Command="{Binding Path=SaveResultsCommand}"/>
+                Command="{Binding Path=OpenInNotepadCommand}"/>
     </Grid>
 </mps:ModPlusWindow>
