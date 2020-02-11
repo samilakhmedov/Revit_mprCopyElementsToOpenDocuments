@@ -127,7 +127,7 @@
             </TreeView>
 
             <!-- count -->
-            <TextBlock Grid.Row="2" Margin="4 0 0 20"
+            <TextBlock Grid.Row="2" Margin="4 0 0 4"
                        HorizontalAlignment="Left">
                 <Run Text="{Binding Source={StaticResource Lang}, XPath=h1}"></Run>
                 <Run Text="{Binding Path=SelectedItems.Count, Mode=OneWay}" FontWeight="SemiBold"></Run>
