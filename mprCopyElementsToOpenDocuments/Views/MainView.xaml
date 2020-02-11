@@ -25,13 +25,16 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
         <!-- elements in document -->
-        <Grid Grid.Column="0">
+        <Grid Grid.Column="0" Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- controls -->
@@ -106,7 +109,7 @@
             </Grid>
 
             <!-- tree -->
-            <TreeView Grid.Row="1" Name="ElementsTreeView" Margin="4 4 4 20"
+            <TreeView Grid.Row="1" Name="ElementsTreeView"
                       ItemsSource="{Binding Path=GeneralGroups}"
                       ScrollViewer.CanContentScroll="False"
                       VirtualizingStackPanel.IsVirtualizing="True"
@@ -125,22 +128,14 @@
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>
-
-            <!-- count -->
-            <TextBlock Grid.Row="2" Margin="4 0 0 4"
-                       HorizontalAlignment="Left">
-                <Run Text="{Binding Source={StaticResource Lang}, XPath=h1}"></Run>
-                <Run Text="{Binding Path=SelectedItems.Count, Mode=OneWay}" FontWeight="SemiBold"></Run>
-            </TextBlock>
         </Grid>
 
         <!-- setup -->
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="1" Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -208,39 +203,46 @@
             <Button Name="LogButton" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     Command="{Binding Path=OpenLogCommand}"
                     Content="{Binding Source={StaticResource Lang}, XPath=h5}"/>
+           
             <!-- do copy -->
             <Button Name="TransferButton" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     Command="{Binding Path=StartCopyingCommand}"
                     Content="{Binding Source={StaticResource Lang}, XPath=h6}"/>
+        </Grid>
 
-            <!-- stop copy -->
-            <Grid Grid.Row="5" Visibility="{Binding Path=IsVisible}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.7*"/>
-                    <ColumnDefinition Width="0.15*"/>
-                    <ColumnDefinition Width="0.15*"/>
-                </Grid.ColumnDefinitions>
-                <ProgressBar Grid.Column="0" HorizontalAlignment="Stretch" 
-                             Value ="{Binding Path=PassedElements}"
-                             Maximum="{Binding Path=TotalElements}"/>
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Center">
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Text="{Binding Path=PassedElements}"/>
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Text="/"/>
-                    <TextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Text="{Binding Path=TotalElements}"/>
-                </StackPanel>
-                <Button Grid.Column="2"
-                        Content="{Binding Source={StaticResource Lang}, XPath=m32}"
-                        Command="{Binding Path=StopCopyingCommand}"/>
-            </Grid>
+        <!-- count -->
+        <TextBlock Grid.Column="0" Grid.Row="1" Margin="4 0 0 4" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Run Text="{Binding Source={StaticResource Lang}, XPath=h1}"></Run>
+            <Run Text="{Binding Path=SelectedItems.Count, Mode=OneWay}" FontWeight="SemiBold"></Run>
+        </TextBlock>
+
+        <!-- stop copy -->
+        <Grid Grid.Column="1" Grid.Row="1" Visibility="{Binding Path=IsVisible}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.7*"/>
+                <ColumnDefinition Width="0.15*"/>
+                <ColumnDefinition Width="0.15*"/>
+            </Grid.ColumnDefinitions>
+            <ProgressBar Grid.Column="0" HorizontalAlignment="Stretch" 
+                         Value ="{Binding Path=PassedElements}"
+                         Maximum="{Binding Path=TotalElements}"/>
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Text="{Binding Path=PassedElements}"/>
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Text="/"/>
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Text="{Binding Path=TotalElements}"/>
+            </StackPanel>
+            <Button Grid.Column="2"
+                    Content="{Binding Source={StaticResource Lang}, XPath=m32}"
+                    Command="{Binding Path=StopCopyingCommand}"/>
         </Grid>
     </Grid>
 </mps:ModPlusWindow>
