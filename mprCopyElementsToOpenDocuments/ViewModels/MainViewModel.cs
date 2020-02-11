@@ -22,12 +22,11 @@
         private int _passedElements;
         private int _brokenElements;
         private int _totalElements = 1;
-        private Visibility _isShowing = Visibility.Collapsed;
+        private Visibility _isShowing = Visibility.Hidden;
         private readonly MainView _mainView;
         private RevitDocument _fromDocument;
         private CopyingOptions _copyingOptions = CopyingOptions.AllowDuplicates;
         private List<BrowserItem> _selectedItems = new List<BrowserItem>();
-        private ObservableCollection<GeneralItemsGroup> _generalGroups = new ObservableCollection<GeneralItemsGroup>();
         private ObservableCollection<RevitDocument> _openedDocuments = new ObservableCollection<RevitDocument>();
         private ObservableCollection<RevitDocument> _toDocuments = new ObservableCollection<RevitDocument>();
 
@@ -43,6 +42,8 @@
             _revitOperationService.PassedElementsCountChanged +=
                 OnPassedElementsCountChanged;
             _revitOperationService.BrokenElementsCountChanged += OnBrokenElementsCountChanged;
+
+            GeneralGroups = new ObservableCollection<GeneralItemsGroup>();
 
             var docs = _revitOperationService.GetAllDocuments();
             foreach (var doc in docs)
@@ -67,56 +68,47 @@
         /// <summary>
         /// Команда обработки выбранного документа Revit
         /// </summary>
-        public ICommand ProcessSelectedDocumentCommand =>
-            new RelayCommandWithoutParameter(ProcessSelectedDocument);
+        public ICommand ProcessSelectedDocumentCommand => new RelayCommandWithoutParameter(ProcessSelectedDocument);
 
         /// <summary>
         /// Команда выбора настроек копирования
         /// </summary>
-        public ICommand ChangeCopyingOptionsCommand =>
-            new RelayCommand<string>(ChangeCopyingOptions);
+        public ICommand ChangeCopyingOptionsCommand => new RelayCommand<string>(ChangeCopyingOptions);
 
         /// <summary>
         /// Команда раскрытия всех элементов групп браузера
         /// </summary>
-        public ICommand ExpandAllCommand =>
-            new RelayCommandWithoutParameter(ExpandAll);
+        public ICommand ExpandAllCommand => new RelayCommandWithoutParameter(ExpandAll);
 
         /// <summary>
         /// Команда скрытия всех элементов групп браузера
         /// </summary>
-        public ICommand CollapseAllCommand =>
-            new RelayCommandWithoutParameter(CollapseAll);
+        public ICommand CollapseAllCommand => new RelayCommandWithoutParameter(CollapseAll);
 
         /// <summary>
         /// Команда выделения всех элементов групп браузера
         /// </summary>
-        public ICommand CheckAllCommand =>
-            new RelayCommandWithoutParameter(CheckAll);
+        public ICommand CheckAllCommand => new RelayCommandWithoutParameter(CheckAll);
 
         /// <summary>
         /// Команда снятия выделения всех элементов групп браузера
         /// </summary>
-        public ICommand UncheckAllCommand =>
-            new RelayCommandWithoutParameter(UncheckAll);
+        public ICommand UncheckAllCommand => new RelayCommandWithoutParameter(UncheckAll);
 
         /// <summary>
         /// Команда начала копирования
         /// </summary>
-        public ICommand StartCopyingCommand =>
-            new RelayCommandWithoutParameter(StartCopying, CanStartCopying);
+        public ICommand StartCopyingCommand => new RelayCommandWithoutParameter(StartCopying, CanStartCopying);
 
         /// <summary>
         /// Команда открытия журнала работы приложения
         /// </summary>
-        public ICommand OpenLogCommand =>
-            new RelayCommandWithoutParameter(OpenLog);
+        public ICommand OpenLogCommand => new RelayCommandWithoutParameter(OpenLog);
 
         /// <summary>
         /// Команда остановки процесса копирования
         /// </summary>
-        public ICommand StopCopyingCommand =>
-            new RelayCommandWithoutParameter(StopCopying);
+        public ICommand StopCopyingCommand => new RelayCommandWithoutParameter(StopCopying);
 
         /// <summary>
         /// Указывает, выполняет ли приложение копирование
@@ -186,15 +178,7 @@
         /// <summary>
         /// Обобщенные группы элементов для отображения в дереве
         /// </summary>
-        public ObservableCollection<GeneralItemsGroup> GeneralGroups
-        {
-            get => _generalGroups;
-            set
-            {
-                _generalGroups = value;
-                OnPropertyChanged();
-            }
-        }
+        public ObservableCollection<GeneralItemsGroup> GeneralGroups { get; }
 
         /// <summary>
         /// Открытые документы
@@ -398,7 +382,7 @@
         {
             var loggerViewModel = new LoggerViewModel();
             var loggerView = new LoggerView { DataContext = loggerViewModel };
-            loggerView.Show();
+            loggerView.ShowDialog();
         }
 
         /// <summary>
@@ -416,7 +400,7 @@
         {
             var allCheckedElements = new List<BrowserItem>();
 
-            foreach (var generalGroup in _generalGroups)
+            foreach (var generalGroup in GeneralGroups)
             {
                 foreach (var categoryGroup in generalGroup.Items)
                 {
@@ -449,7 +433,7 @@
             if (e)
             {
                 PassedElements++;
-                IsVisible = Visibility.Collapsed;
+                IsVisible = Visibility.Hidden;
                 _mainView.IsChangeableFieldsEnabled = true;
                 var resultMessage = string.Format(
                     ModPlusAPI.Language.GetItem(_langItem, "m31"),
@@ -458,6 +442,7 @@
                     BrokenElements,
                     Environment.NewLine);
                 TaskDialog.Show(ModPlusAPI.Language.GetItem(_langItem, "m30"), resultMessage);
+                _mainView.Activate();
                 PassedElements = 0;
                 BrokenElements = 0;
                 TotalElements = 1;

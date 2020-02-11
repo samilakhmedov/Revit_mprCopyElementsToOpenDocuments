@@ -13,22 +13,22 @@
     {
         private bool? _checked = false;
         private bool _isExpanded = true;
-        private ObservableCollection<BrowserItem> _groups = new ObservableCollection<BrowserItem>();
 
         /// <summary>
         /// Создает экземпляр класса <see cref="GeneralItemsGroup"/>
         /// </summary>
         /// <param name="name">Имя группы</param>
         /// <param name="groups">Список групп элементов</param>
-        public GeneralItemsGroup(string name, List<BrowserItem> groups)
+        public GeneralItemsGroup(string name, IEnumerable<BrowserItem> groups)
         {
             Name = name;
+            Items = new ObservableCollection<BrowserItem>();
 
-            groups.ForEach(group =>
+            foreach (var g in groups)
             {
-                group.SelectionChanged += OnGroupSelectionChanged;
-                _groups.Add(group);
-            });
+                g.SelectionChanged += OnGroupSelectionChanged;
+                Items.Add(g);
+            }
         }
 
         /// <summary>
@@ -47,7 +47,7 @@
             {
                 _checked = value;
 
-                foreach (var group in _groups)
+                foreach (var group in Items)
                 {
                     group.Checked = value;
                 }
@@ -71,15 +71,7 @@
         /// <summary>
         /// Список элементов группы
         /// </summary>
-        public ObservableCollection<BrowserItem> Items
-        {
-            get => _groups;
-            set
-            {
-                _groups = value;
-                OnPropertyChanged();
-            }
-        }
+        public ObservableCollection<BrowserItem> Items { get; }
 
         /// <summary>
         /// Метод обработки выделения элементов в браузере

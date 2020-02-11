@@ -1,8 +1,5 @@
 ﻿namespace mprCopyElementsToOpenDocuments.Views
 {
-    using System.Windows;
-    using System.Windows.Controls;
-
     /// <summary>
     /// Главное окно плагина
     /// </summary>
@@ -41,16 +38,6 @@
                 ToDoc.IsEnabled = value;
                 LogButton.IsEnabled = value;
                 TransferButton.IsEnabled = value;
-            }
-        }
-
-        // https://stackoverflow.com/a/9494484/4944499
-        private void TreeViewSelectedItem_OnHandler(object sender, RoutedEventArgs e)
-        {
-            if (sender is TreeViewItem item)
-            {
-                item.BringIntoView();
-                e.Handled = true;
             }
         }
     }

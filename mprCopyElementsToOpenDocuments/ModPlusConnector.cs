@@ -20,13 +20,7 @@
         /// <inheritdoc />
         public string Name => "mprCopyElementsToOpenDocuments";
 
-#if R2015
-        /// <inheritdoc />
-        public string AvailProductExternalVersion => "2015";
-#elif R2016
-        /// <inheritdoc />
-        public string AvailProductExternalVersion => "2016";
-#elif R2017
+#if R2017
         /// <inheritdoc />
         public string AvailProductExternalVersion => "2017";
 #elif R2018
