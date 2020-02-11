@@ -152,10 +152,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\check_all.png" />
-    <Resource Include="Resources\collapse_all.png" />
-    <Resource Include="Resources\expand_all.png" />
-    <Resource Include="Resources\uncheck_all.png" />
+    <Resource Include="Resources\mprCopyElementsToOpenDocuments_16x16.png" />
+    <Resource Include="Resources\mprCopyElementsToOpenDocuments_32x32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

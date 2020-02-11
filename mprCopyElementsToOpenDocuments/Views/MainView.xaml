@@ -66,7 +66,8 @@
                             <Setter Property="MinHeight" Value="0"></Setter>
                         </Style>
                     </StackPanel.Resources>
-                    <Button Name="ExpandAll" Command="{Binding Path=ExpandAllCommand}">
+                    <Button Name="ExpandAll" Command="{Binding Path=ExpandAllCommand}"
+                            ToolTip="{Binding Source={StaticResource Lang}, XPath=h8}">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Button}, Path=Foreground}" 
@@ -74,7 +75,8 @@
                             </Canvas>
                         </Viewbox>
                     </Button>
-                    <Button Name="CollapseAll" Command="{Binding Path=CollapseAllCommand}">
+                    <Button Name="CollapseAll" Command="{Binding Path=CollapseAllCommand}"
+                            ToolTip="{Binding Source={StaticResource Lang}, XPath=h9}">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Button}, Path=Foreground}" 
@@ -82,7 +84,8 @@
                             </Canvas>
                         </Viewbox>
                     </Button>
-                    <Button Name="CheckAll" Command="{Binding Path=CheckAllCommand}">
+                    <Button Name="CheckAll" Command="{Binding Path=CheckAllCommand}"
+                            ToolTip="{Binding Source={StaticResource Lang}, XPath=h10}">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Button}, Path=Foreground}" 
@@ -90,7 +93,8 @@
                             </Canvas>
                         </Viewbox>
                     </Button>
-                    <Button Name="UncheckAll" Command="{Binding Path=UncheckAllCommand}">
+                    <Button Name="UncheckAll" Command="{Binding Path=UncheckAllCommand}"
+                            ToolTip="{Binding Source={StaticResource Lang}, XPath=h11}">
                         <Viewbox Width="24" Height="24">
                             <Canvas Width="24" Height="24">
                                 <Path Fill="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Button}, Path=Foreground}" 
@@ -123,7 +127,7 @@
             </TreeView>
 
             <!-- count -->
-            <TextBlock Grid.Row="2" Margin="4 0 0 4"
+            <TextBlock Grid.Row="2" Margin="4 0 0 20"
                        HorizontalAlignment="Left">
                 <Run Text="{Binding Source={StaticResource Lang}, XPath=h1}"></Run>
                 <Run Text="{Binding Path=SelectedItems.Count, Mode=OneWay}" FontWeight="SemiBold"></Run>
