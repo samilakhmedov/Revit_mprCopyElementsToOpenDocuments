@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Windows;
     using Interfaces;
     using ModPlusAPI.Mvvm;
 
@@ -49,7 +50,8 @@
 
                 foreach (var group in Items)
                 {
-                    group.Checked = value;
+                    if (group.Visibility == Visibility.Visible)
+                        group.Checked = value;
                 }
 
                 OnPropertyChanged();

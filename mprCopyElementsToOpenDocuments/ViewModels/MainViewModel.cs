@@ -22,6 +22,7 @@
         private int _passedElements;
         private int _brokenElements;
         private int _totalElements = 1;
+        private string _searchString = string.Empty;
         private Visibility _isShowing = Visibility.Hidden;
         private readonly MainView _mainView;
         private RevitDocument _fromDocument;
@@ -163,6 +164,19 @@
         }
 
         /// <summary>
+        /// Текст строки поиска
+        /// </summary>
+        public string SearchString
+        {
+            get => _searchString;
+            set
+            {
+                _searchString = value;
+                UpdateItemsVisibility();
+            }
+        }
+
+        /// <summary>
         /// Настройки копирования элементов
         /// </summary>
         public CopyingOptions CopyingOptions
@@ -233,6 +247,85 @@
         }
 
         /// <summary>
+        /// Обновляет видимость элементов дерева
+        /// </summary>
+        public void UpdateItemsVisibility()
+        {
+            if (string.IsNullOrEmpty(SearchString))
+            {
+                foreach (var generalGroup in GeneralGroups)
+                {
+                    foreach (var categoryGroup in generalGroup.Items)
+                    {
+                        categoryGroup.ShowItem();
+                        foreach (var typeGroup in categoryGroup.Items)
+                        {
+                            categoryGroup.IsExpanded = false;
+                            typeGroup.Visibility = Visibility.Visible;
+                            typeGroup.ShowAllItems();
+                        }
+                    }
+                }
+            }
+
+            foreach (var generalGroup in GeneralGroups)
+            {
+                foreach (var categoryGroup in generalGroup.Items)
+                {
+                    var typeFound = false;
+                    if (categoryGroup.Name.ToUpperInvariant().Contains(SearchString.ToUpperInvariant()))
+                    {
+                        categoryGroup.ShowItem();
+                        foreach (var typeGroup in categoryGroup.Items)
+                        {
+                            typeGroup.ShowItem();
+                            typeGroup.ShowAllItems();
+                        }
+                    }
+                    else
+                    {
+                        foreach (var typeGroup in categoryGroup.Items)
+                        {
+                            if (typeGroup.Name.ToUpperInvariant().Contains(SearchString.ToUpperInvariant()))
+                            {
+                                typeFound = true;
+                                categoryGroup.ShowItem(true);
+                                typeGroup.ShowItem();
+                                typeGroup.ShowAllItems();
+                            }
+                            else
+                            {
+                                foreach (var item in typeGroup.Items)
+                                {
+                                    item.Visibility = item.Name.ToUpperInvariant()
+                                        .Contains(SearchString.ToUpperInvariant())
+                                        ? Visibility.Visible
+                                        : Visibility.Collapsed;
+                                }
+
+                                if (typeGroup.Items.Any(item => item.Visibility == Visibility.Visible))
+                                {
+                                    generalGroup.IsExpanded = true;
+                                    categoryGroup.ShowItem(true);
+                                    typeGroup.ShowItem(true);
+                                }
+                                else
+                                {
+                                    if (!typeFound)
+                                    {
+                                        categoryGroup.HideItem();
+                                    }
+
+                                    typeGroup.HideItem();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Разворачивает все элементы групп в браузере
         /// </summary>
         private void ExpandAll()
@@ -288,6 +381,11 @@
         {
             foreach (var generalGroup in GeneralGroups)
             {
+                foreach (var categoryGroup in generalGroup.Items)
+                {
+                    categoryGroup.Checked = false;
+                }
+
                 generalGroup.Checked = false;
             }
         }
@@ -344,6 +442,8 @@
                     ToDocuments.Add(document);
                 }
             }
+
+            UpdateItemsVisibility();
         }
 
         /// <summary>

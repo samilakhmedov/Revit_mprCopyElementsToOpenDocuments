@@ -61,6 +61,35 @@
             { nameof(SharedParameterElement), ModPlusAPI.Language.GetItem(LangItem, "m26") },
         };
 
+        private readonly Dictionary<ViewType, string> _viewTypeNames = new Dictionary<ViewType, string>
+        {
+            { ViewType.AreaPlan, ModPlusAPI.Language.GetItem(LangItem, "m34") },
+            { ViewType.CeilingPlan, ModPlusAPI.Language.GetItem(LangItem, "m35") },
+            { ViewType.ColumnSchedule, ModPlusAPI.Language.GetItem(LangItem, "m36") },
+            { ViewType.CostReport, ModPlusAPI.Language.GetItem(LangItem, "m37") },
+            { ViewType.Detail, ModPlusAPI.Language.GetItem(LangItem, "m38") },
+            { ViewType.DraftingView, ModPlusAPI.Language.GetItem(LangItem, "m39") },
+            { ViewType.DrawingSheet, ModPlusAPI.Language.GetItem(LangItem, "m40") },
+            { ViewType.Elevation, ModPlusAPI.Language.GetItem(LangItem, "m41") },
+            { ViewType.EngineeringPlan, ModPlusAPI.Language.GetItem(LangItem, "m42") },
+            { ViewType.FloorPlan, ModPlusAPI.Language.GetItem(LangItem, "m43") },
+            { ViewType.Internal, ModPlusAPI.Language.GetItem(LangItem, "m44") },
+            { ViewType.Legend, ModPlusAPI.Language.GetItem(LangItem, "m45") },
+            { ViewType.LoadsReport, ModPlusAPI.Language.GetItem(LangItem, "m46") },
+            { ViewType.PanelSchedule, ModPlusAPI.Language.GetItem(LangItem, "m47") },
+            { ViewType.PresureLossReport, ModPlusAPI.Language.GetItem(LangItem, "m48") },
+            { ViewType.ProjectBrowser, ModPlusAPI.Language.GetItem(LangItem, "m49") },
+            { ViewType.Rendering, ModPlusAPI.Language.GetItem(LangItem, "m50") },
+            { ViewType.Report, ModPlusAPI.Language.GetItem(LangItem, "m51") },
+            { ViewType.Schedule, ModPlusAPI.Language.GetItem(LangItem, "m52") },
+            { ViewType.Section, ModPlusAPI.Language.GetItem(LangItem, "m53") },
+            { ViewType.SystemBrowser, ModPlusAPI.Language.GetItem(LangItem, "m54") },
+            { ViewType.SystemsAnalysisReport, ModPlusAPI.Language.GetItem(LangItem, "m55") },
+            { ViewType.ThreeD, ModPlusAPI.Language.GetItem(LangItem, "m56") },
+            { ViewType.Walkthrough, ModPlusAPI.Language.GetItem(LangItem, "m57") },
+            { ViewType.Undefined, ModPlusAPI.Language.GetItem(LangItem, "m58") },
+        };
+
         private bool _stopCopyingOperation;
         private int _passedElements;
 
@@ -129,7 +158,7 @@
                 allElements.AddRange(GetGridsAndLevels(revitDocument));
                 allElements.AddRange(GetParameters(revitDocument));
                 allElements.AddRange(GetCategories(revitDocument));
-                
+
                 var elementsGroupedByCategory = allElements
                     .GroupBy(e => e.CategoryName)
                     .ToList();
@@ -447,7 +476,7 @@
         private IEnumerable<BrowserItem> GetParameters(RevitDocument revitDocument)
         {
             var parameters = new List<BrowserItem>();
-            if (revitDocument.Document.IsFamilyDocument) 
+            if (revitDocument.Document.IsFamilyDocument)
                 return parameters;
 
             var definitionBindingMapIterator = revitDocument.Document.ParameterBindings.ForwardIterator();
@@ -457,9 +486,9 @@
                 Element element = null;
                 try
                 {
-                    var key = (InternalDefinition) definitionBindingMapIterator.Key;
+                    var key = (InternalDefinition)definitionBindingMapIterator.Key;
                     element = revitDocument.Document.GetElement(key.Id);
-                    var elementType = (ElementType) revitDocument.Document.GetElement(element.GetTypeId());
+                    var elementType = (ElementType)revitDocument.Document.GetElement(element.GetTypeId());
                     parameters.Add(new BrowserItem(
                         element.Id.IntegerValue,
                         element.Category?.Name ?? _specialTypeCategoryNames[element.GetType().Name],
@@ -491,7 +520,7 @@
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category.Name,
@@ -544,12 +573,12 @@
         {
             return new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(ElementType))
-                .Where(e => ((ElementType) e).FamilyName == "Viewport")
+                .Where(e => ((ElementType)e).FamilyName == "Viewport")
                 .Select(e =>
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category.Name,
@@ -575,12 +604,12 @@
             return new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(ElevationMarker))
                 .WhereElementIsNotElementType()
-                .Where(e => ((ElevationMarker) e).CurrentViewCount > 0)
+                .Where(e => ((ElevationMarker)e).CurrentViewCount > 0)
                 .Select(e =>
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category.Name,
@@ -606,12 +635,12 @@
             return new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(View))
                 .WhereElementIsNotElementType()
-                .Where(e => !((View) e).IsTemplate)
+                .Where(e => !((View)e).IsTemplate)
                 .Select(e =>
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],
@@ -632,20 +661,20 @@
                 .Where(e => e != null);
         }
 
-        private static IEnumerable<BrowserItem> GetViewTemplates(RevitDocument revitDocument)
+        private IEnumerable<BrowserItem> GetViewTemplates(RevitDocument revitDocument)
         {
             return new FilteredElementCollector(revitDocument.Document)
                 .OfClass(typeof(View))
-                .Where(e => ((View) e).IsTemplate)
+                .Where(e => ((View)e).IsTemplate)
                 .Select(e =>
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var viewType = ((View)e).ViewType;
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             ModPlusAPI.Language.GetItem(LangItem, "m29"),
-                            elementType != null ? elementType.FamilyName : string.Empty,
+                            _viewTypeNames[viewType],
                             e.Name);
                     }
                     catch (Exception ex)
@@ -676,7 +705,7 @@
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category.Name,
@@ -705,7 +734,7 @@
                 {
                     try
                     {
-                        var elementType = (ElementType) revitDocument.Document.GetElement(e.GetTypeId());
+                        var elementType = (ElementType)revitDocument.Document.GetElement(e.GetTypeId());
                         return new BrowserItem(
                             e.Id.IntegerValue,
                             e.Category?.Name ?? _specialTypeCategoryNames[e.GetType().Name],

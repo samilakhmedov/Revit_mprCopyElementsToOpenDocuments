@@ -34,6 +34,7 @@
         <Grid Grid.Column="0" Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -108,8 +109,14 @@
                 </StackPanel>
             </Grid>
 
+            <TextBox
+                mps:HintAssist.Hint="{Binding Source={StaticResource Lang}, XPath=m33}"
+                Grid.Row="1"
+                Text="{Binding Path=SearchString, UpdateSourceTrigger=PropertyChanged}">
+            </TextBox>
+
             <!-- tree -->
-            <TreeView Grid.Row="1" Name="ElementsTreeView"
+            <TreeView Grid.Row="2" Name="ElementsTreeView"
                       ItemsSource="{Binding Path=GeneralGroups}"
                       ScrollViewer.CanContentScroll="False"
                       VirtualizingStackPanel.IsVirtualizing="True"
@@ -117,14 +124,15 @@
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type model:GeneralItemsGroup}" 
                                               ItemsSource="{Binding Path=Items}">
-                        <CheckBox 
-                            Content="{Binding Path=Name, Mode=OneWay}"
-                            IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox IsChecked="{Binding Path=Checked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBlock Text="{Binding Path=Name, Mode=OneWay}"/>
+                        </CheckBox>
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
                 <TreeView.ItemContainerStyle>
                     <Style BasedOn="{StaticResource ModPlusTreeViewItem}" TargetType="{x:Type TreeViewItem}">
                         <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Setter Property="Visibility" Value="{Binding Path=Visibility}"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>

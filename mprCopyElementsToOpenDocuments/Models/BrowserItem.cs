@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Windows;
     using Interfaces;
     using ModPlusAPI.Mvvm;
 
@@ -15,6 +16,7 @@
         private bool? _checked = false;
         private bool _isExpanded;
         private ObservableCollection<BrowserItem> _items = new ObservableCollection<BrowserItem>();
+        private Visibility _visibility = Visibility.Visible;
 
         /// <summary>
         /// Создает экземпляр класса <see cref="BrowserItem"/>
@@ -106,6 +108,19 @@
         public string Name { get; }
 
         /// <summary>
+        /// Видимость элементов дерева
+        /// </summary>
+        public Visibility Visibility
+        {
+            get => _visibility;
+            set
+            {
+                _visibility = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
         /// Список элементов группы
         /// </summary>
         public ObservableCollection<BrowserItem> Items
@@ -115,6 +130,36 @@
             {
                 _items = value;
                 OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Отображает элемент дерева при поиске
+        /// </summary>
+        /// <param name="isExpanded">Развернуть элемент</param>
+        public void ShowItem(bool isExpanded = false)
+        {
+            IsExpanded = isExpanded;
+            Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Скрывает элемент дерева при поиске
+        /// </summary>
+        public void HideItem()
+        {
+            IsExpanded = false;
+            Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Отображает все дочерние элементы
+        /// </summary>
+        public void ShowAllItems()
+        {
+            foreach (var item in Items)
+            {
+                item.Visibility = Visibility.Visible;
             }
         }
 
