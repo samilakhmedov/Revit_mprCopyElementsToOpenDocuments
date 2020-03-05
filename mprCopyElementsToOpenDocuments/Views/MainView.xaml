@@ -111,6 +111,7 @@
 
             <TextBox
                 mps:HintAssist.Hint="{Binding Source={StaticResource Lang}, XPath=m33}"
+                mps:TextFieldAssist.ClearTextButton="True"
                 Grid.Row="1"
                 Text="{Binding Path=SearchString, UpdateSourceTrigger=PropertyChanged}">
             </TextBox>
